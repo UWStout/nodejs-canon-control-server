@@ -1,0 +1,43 @@
+{
+  "name": "parsec-camera-server",
+  "version": "0.1.0",
+  "description": "Server that monitors attached cameras and communicates their info via an HTTPS server, allowing limited control and downloading of captured images.",
+  "main": "server/server.js",
+  "type": "module",
+  "scripts": {
+    "server": "node server/server.js",
+    "server:dev": "nodemon --watch server server/server.js dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Camera",
+    "Canon",
+    "Control",
+    "HTTP"
+  ],
+  "author": "Seth Berrier",
+  "license": "GPL-3.0-or-later",
+  "nodemonConfig": {
+    "env": {
+      "DEBUG": "parsec:server*",
+      "DEBUG_HIDE_DATE": "true",
+      "DEBUG_COLORS": "true"
+    }
+  },
+  "dependencies": {
+    "@dimensional/napi-canon-cameras": "file:../node_packages/@dimensional/napi-canon-cameras.tgz",
+    "debug": "^4.3.4",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "morgan": "^1.10.0",
+    "nodemon": "^2.0.16",
+    "socket.io": "^4.5.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.16.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.1",
+    "eslint-plugin-promise": "^6.0.0"
+  }
+}
