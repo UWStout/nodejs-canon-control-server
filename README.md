@@ -1,7 +1,7 @@
 # nodejs-canon-control-server
 An HTTP/Websockets server interface for the Canon EDSDK
 
-This project will create a simple server that provides both a RESTful backend with routes that allow query and control of canon cameras via the EDSDK on windows.  It also provides a socket.io connection to push data to connected clients when connected cameras change physically or when other dynamic events occur (like taking a picture).
+This project will create a simple server that provides both a RESTful backend with routes that allow query and control of canon cameras via the EDSDK on windows AND a a socket.io connection to push data to connected clients when connected cameras change physically or when other dynamic events occur (like taking a picture).
 
 The primary goal of this server is to enable management of MANY cameras connected to one computer, especially querying their current modes and exposure settings and updating those modes and exposure settings.  It is intended to be used with the PARSEC photorammetry rig at UW Stout to allow for uniform exposure settings on all connected cameras during a simultaneous capture.
 
