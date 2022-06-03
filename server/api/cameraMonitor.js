@@ -1,6 +1,10 @@
 // The camera control API
 import camAPI from '@dimensional/napi-canon-cameras'
 
+// API Helper interface
+import { setupEventMonitoring } from './APIEventHelper'
+import { getCameraSummaryList } from './APICameraHelper'
+
 // Setup debug for output
 import Debug from 'debug'
 const debug = Debug('parsec:server:monitor')
@@ -9,18 +13,14 @@ const debug = Debug('parsec:server:monitor')
 export async function setSocketServer (serverSocket) {
   // Install camera event monitoring
   debug('Setting up camera event monitoring')
-  camAPI.cameraBrowser.setEventHandler((eventName, ...args) => {
-    debug('CAM_API event:', eventName, args)
-    serverSocket.emit(eventName, args)
-  })
-
-  // Initiate watching for camera events
-  try {
-    camAPI.watchCameras()
-    debug('Awaiting camera events')
-  } catch (e) {
-    debug('Error watching for camera events:', e)
-  }
+  setupEventMonitoring((eventName, ...args) => {
+    switch (eventName) {
+      case camAPI.CameraBrowser.EventName.CameraAdd:
+      case camAPI.CameraBrowser.EventName.CameraRemove:
+        serverSocket.emit('CameraList', getCameraSummaryList())
+        break
+    }
+  }, debug)
 }
 
 export function setupSocketClient (clientSocket) {

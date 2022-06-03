@@ -53,16 +53,6 @@ app.use(morgan(_DEV_ ? 'dev' : 'short'))
 // Enable parsing of JSON-Encoded bodies
 app.use(Express.json())
 
-// Redirect all HTTP requests to use HTTPS
-// app.use((req, res, next) => {
-//   const reqType = req.headers['x-forwarded-proto']
-//   if (reqType === 'https') {
-//     next()
-//   } else {
-//     return res.redirect('https://' + req.headers.host + req.url)
-//   }
-// })
-
 // Attach our data router 'routes' under '/camera'
 app.use('/camera', camReadRouter)
 app.use('/camera', camWriteRouter)

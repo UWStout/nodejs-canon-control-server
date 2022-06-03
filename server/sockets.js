@@ -30,6 +30,8 @@ export function makeSocket (serverListener) {
 
   // Respond to new socket connections
   mySocket.on('connection', (socket) => {
+    debug(`[WS:${socket.id}] New ${socket.request.session.type} connection`)
+
     // Configure our custom message responses
     setupSocketClient(socket)
 
@@ -64,8 +66,5 @@ function socketDisconnect (reason) {
 // Log the ping from a client
 // - 'this' = current socket
 function socketPing () {
-  if (this.request.session) {
-    this.request.session.lastPing = Date.now()
-    this.request.session.save()
-  }
+  debug(`[WS:${this.id}] websocket ping`)
 }
