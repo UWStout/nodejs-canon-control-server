@@ -1,7 +1,13 @@
 // Basic HTTP routing library
 import Express from 'express'
 
-import { getCameraSummaryList, getCameraInfo } from './canonAPIHelper.js'
+import {
+  getCameraSummaryList,
+  getCameraInfo,
+  getCameraProperty
+} from './APICameraHelper.js'
+
+import CameraAPIError from './CameraAPIError.js'
 
 // Setup debug for output
 import Debug from 'debug'
@@ -13,14 +19,35 @@ const router = new Express.Router()
 // ******* API Camera Reading routes **************
 router.get('/', (req, res) => {
   debug('sending camera summary list')
-  const cameras = getCameraSummaryList()
-  res.json(cameras)
+  try {
+    const cameras = getCameraSummaryList()
+    return res.json(cameras)
+  } catch (e) {
+    CameraAPIError.respond(e, res)
+  }
 })
 
 router.get('/:index', (req, res) => {
   debug(`sending details for camera ${req.params.index}`)
-  const cameraDetails = getCameraInfo(parseInt(req.params.index), false)
-  res.json(cameraDetails)
+  try {
+    const cameraDetails = getCameraInfo(parseInt(req.params.index), false)
+    return res.json(cameraDetails)
+  } catch (e) {
+    CameraAPIError.respond(e, res)
+  }
+})
+
+router.get('/:index/:propID', (req, res) => {
+  debug(`sending details for camera ${req.params.index}`)
+  try {
+    const cameraProperty = getCameraProperty(parseInt(req.params.index), req.params.propID)
+    return res.json(cameraProperty)
+  } catch (e) {
+    CameraAPIError.respond(e, res, {
+      index: parseInt(req.params.index),
+      propID: req.params.propID
+    })
+  }
 })
 // ******* API Camera Writing routes **************
 

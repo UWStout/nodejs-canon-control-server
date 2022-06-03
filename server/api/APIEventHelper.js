@@ -3,7 +3,7 @@ import camAPI from '@dimensional/napi-canon-cameras'
 
 const POLLING_INTERVAL_MS = 100
 
-export function setupEventMonitoring (eventCallback, debug = console.error) {
+export function setupEventMonitoring (eventCallback, updateCameraList = 0, debug = console.error) {
   // Set event callback
   camAPI.cameraBrowser.setEventHandler(eventCallback)
 
@@ -14,5 +14,10 @@ export function setupEventMonitoring (eventCallback, debug = console.error) {
     debug('Awaiting camera events')
   } catch (e) {
     debug('Error watching for camera events:', e)
+  }
+
+  // Initiate periodic polling to update camera list
+  if (updateCameraList) {
+    setTimeout(() => camAPI.cameraBrowser.update(), updateCameraList)
   }
 }
