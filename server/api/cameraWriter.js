@@ -2,7 +2,10 @@
 import Express from 'express'
 
 import {
-  setCameraProperty
+  setCameraProperty,
+  takePicture,
+  pressShutterButton,
+  computeTZValue
 } from './APICameraHelper.js'
 
 import CameraAPIError from './CameraAPIError.js'
@@ -18,6 +21,58 @@ const router = new Express.Router()
 router.use(Express.json())
 
 // ******* API Camera Writing routes **************
+router.post('/:index/trigger', (req, res) => {
+  debug(`Triggering shutter for camera ${parseInt(req.params.index)}`)
+  try {
+    takePicture(parseInt(req.params.index))
+    return res.send({ status: 'OK' })
+  } catch (err) {
+    return CameraAPIError.respond(err, res, {
+      index: parseInt(req.params.index)
+    })
+  }
+})
+
+router.post('/:index/halfShutter', (req, res) => {
+  debug(`Halfway shutter press for camera ${parseInt(req.params.index)}`)
+  try {
+    pressShutterButton(parseInt(req.params.index), true)
+    return res.send({ status: 'OK' })
+  } catch (err) {
+    return CameraAPIError.respond(err, res, {
+      index: parseInt(req.params.index)
+    })
+  }
+})
+
+router.post('/:index/fullShutter', (req, res) => {
+  debug(`Full shutter press for camera ${parseInt(req.params.index)}`)
+  try {
+    pressShutterButton(parseInt(req.params.index))
+    return res.send({ status: 'OK' })
+  } catch (err) {
+    return CameraAPIError.respond(err, res, {
+      index: parseInt(req.params.index)
+    })
+  }
+})
+
+router.post('/:index/syncTime', (req, res) => {
+  debug(`Synchronizing date and time for camera ${parseInt(req.params.index)}`)
+  const now = new Date()
+  const tzString = Intl.DateTimeFormat().resolvedOptions().timeZone
+  try {
+    setCameraProperty(parseInt(req.params.index), 'UTCTime', now)
+    setCameraProperty(parseInt(req.params.index), 'TimeZone', computeTZValue(tzString))
+    return res.send({ status: 'OK' })
+  } catch (err) {
+    return CameraAPIError.respond(err, res, {
+      index: parseInt(req.params.index),
+      value: now.getTime()
+    })
+  }
+})
+
 router.post('/:index/:propID', (req, res) => {
   debug(`Setting ${req.params.propID} for camera ${parseInt(req.params.index)}`)
   try {

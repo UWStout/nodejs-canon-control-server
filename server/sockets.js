@@ -2,7 +2,7 @@
 import * as io from 'socket.io'
 
 // Web socket message handler
-import { setSocketServer, setupSocketClient } from './api/cameraMonitor.js'
+import { enableSocketServer, setSocketServer, setupSocketClient } from './api/cameraMonitor.js'
 
 // Read env variables from the .env file
 import dotenv from 'dotenv'
@@ -55,6 +55,11 @@ export function makeSocket (serverListener) {
 
   // Return the socket.io interface
   return mySocket
+}
+
+// Call once server is ready and listening
+export function serverReady () {
+  enableSocketServer(true)
 }
 
 // Respond to socket.disconnect events

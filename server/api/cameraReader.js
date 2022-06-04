@@ -2,6 +2,7 @@
 import Express from 'express'
 
 import {
+  portList, SNList,
   getCameraSummaryList,
   getCameraInfo,
   getCameraProperty
@@ -22,6 +23,24 @@ router.get('/', (req, res) => {
   try {
     const cameras = getCameraSummaryList()
     return res.json(cameras)
+  } catch (e) {
+    CameraAPIError.respond(e, res)
+  }
+})
+
+router.get('/serials', (req, res) => {
+  debug('sending camera serial number lookup list')
+  try {
+    return res.json(SNList)
+  } catch (e) {
+    CameraAPIError.respond(e, res)
+  }
+})
+
+router.get('/ports', (req, res) => {
+  debug('sending camera port name lookup list')
+  try {
+    return res.json(portList)
   } catch (e) {
     CameraAPIError.respond(e, res)
   }

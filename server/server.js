@@ -15,7 +15,7 @@ import morgan from 'morgan'
 import camReadRouter from './api/cameraReader.js'
 import camWriteRouter from './api/cameraWriter.js'
 
-import { makeSocket } from './sockets.js'
+import { makeSocket, serverReady } from './sockets.js'
 
 // Read extra environment variables from the .env file
 import dotenv from 'dotenv'
@@ -66,10 +66,12 @@ makeSocket(server)
 // Bind to a port and start listening
 if (_DEV_) {
   server.listen(DEV_PORT, 'localhost', () => {
+    serverReady()
     console.log(`PARSEC Camera DEV server listening on port ${DEV_PORT}`)
   })
 } else {
   server.listen(PROD_PORT, 'localhost', () => {
+    serverReady()
     console.log(`PARSEC Camera server listening on port ${PROD_PORT}`)
   })
 }
