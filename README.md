@@ -14,3 +14,6 @@ You can examine the package.json to see the usual dependencies.  There is, howev
 
 Note that I found I had to update some code for that napi-canon-cameras module to get it to work.  You can find my forked version with these fixes here:
 - https://github.com/olliebrown/napi-canon-cameras
+
+# PRIVATE
+The bundled version of napi-canon-cameras is included under the 'node_packages' folder so this is no longer an external dependency.  However, this includes files from the EDSDK which we do not have the right to redistribute so this repository needs to remain private and we should use caution when sharing this project.
