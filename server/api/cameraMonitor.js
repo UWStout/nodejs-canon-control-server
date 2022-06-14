@@ -55,15 +55,15 @@ export function setSocketServer (serverSocket) {
           break
 
         case camAPI.CameraBrowser.EventName.StateChange:
-          debug('State change: camera', camIndex, stateEvent)
+          // debug('State change: camera', camIndex, stateEvent)
           break
 
         case camAPI.CameraBrowser.EventName.PropertyChangeValue:
-          debug('Property value change: camera', camIndex, property)
+          // debug('Property value change: camera', camIndex, property)
           break
 
         case camAPI.CameraBrowser.EventName.PropertyChangeOptions:
-          debug('Property options change: camera', camIndex, property)
+          // debug('Property options change: camera', camIndex, property)
           break
 
         case camAPI.CameraBrowser.EventName.CameraAdd:

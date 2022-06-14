@@ -5,6 +5,9 @@ import https from 'https'
 // Our primary HTTP(S) server library
 import Express from 'express'
 
+// enabling cross-origin requests
+import Cors from 'cors'
+
 // print messages only during debug
 import Debug from 'debug'
 
@@ -50,6 +53,9 @@ const server = https.createServer(SSLOptions, app)
 
 // prints messages related to web traffic
 app.use(morgan(_DEV_ ? 'dev' : 'short'))
+
+// Cors configuration to allow any origin and echo it back
+app.use(Cors({ origin: true }))
 
 // Enable parsing of JSON-Encoded bodies
 app.use(Express.json())

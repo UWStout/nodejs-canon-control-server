@@ -13,7 +13,7 @@ const FULL_PROPS = [
   'ProductName',
   'BodyIDEx',
   'OwnerName',
-  'DateTime',
+  // 'DateTime',
   'FirmwareVersion',
   'BatteryLevel',
   'SaveTo',
@@ -129,6 +129,7 @@ export function getCameraInfo (index, summary = true) {
     // curCam.disconnect()
     return { index, portName: curCam.portName, ...props }
   } catch (e) {
+    console.error('Error getting properties', e)
     throw new CameraAPIError(404, `Camera ${index} not found`)
   }
 }
