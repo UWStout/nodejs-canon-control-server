@@ -22,6 +22,7 @@ import dotenv from 'dotenv'
 
 // Update environment variables
 dotenv.config()
+const HOST_NAME = process.env.HOST_NAME || 'localhost'
 const DEV_PORT = process.env.DEV_PORT || 3000
 const PROD_PORT = process.env.PROD_PORT || 42424
 
@@ -65,12 +66,12 @@ makeSocket(server)
 
 // Bind to a port and start listening
 if (_DEV_) {
-  server.listen(DEV_PORT, 'localhost', () => {
+  server.listen(DEV_PORT, HOST_NAME, () => {
     serverReady()
     console.log(`PARSEC Camera DEV server listening on port ${DEV_PORT}`)
   })
 } else {
-  server.listen(PROD_PORT, 'localhost', () => {
+  server.listen(PROD_PORT, HOST_NAME, () => {
     serverReady()
     console.log(`PARSEC Camera server listening on port ${PROD_PORT}`)
   })
