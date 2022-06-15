@@ -12,6 +12,7 @@ import CameraAPIError from './CameraAPIError.js'
 
 // Setup debug for output
 import Debug from 'debug'
+import { getAEModeValues, getExposureCompValues } from './APIOptionsHelper.js'
 const debug = Debug('parsec:server:reader')
 
 // Create a router to attach to an express server app
@@ -72,6 +73,16 @@ router.get('/:index/:propID', (req, res) => {
 router.get('/:index/:propID/allowed', (req, res) => {
   debug(`sending allowed values for property ${req.params.propID} on camera ${req.params.index}`)
   try {
+    // A few special values that need to be handled differently
+    if (req.params.propID === 'AEMode') {
+      const values = getAEModeValues()
+      return res.json(values)
+    } else if (req.params.propID === 'ExposureCompensation') {
+      const values = getExposureCompValues()
+      return res.json(values)
+    }
+
+    // Normal properties
     const cameraProperty = getCameraProperty(parseInt(req.params.index), req.params.propID)
     return res.json(cameraProperty.allowedValues)
   } catch (e) {
