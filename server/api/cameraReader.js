@@ -57,7 +57,7 @@ router.get('/:index', (req, res) => {
 })
 
 router.get('/:index/:propID', (req, res) => {
-  debug(`sending details for camera ${req.params.index}`)
+  debug(`sending current value of property ${req.params.propID} on camera ${req.params.index}`)
   try {
     const cameraProperty = getCameraProperty(parseInt(req.params.index), req.params.propID)
     return res.json(cameraProperty)
@@ -68,7 +68,21 @@ router.get('/:index/:propID', (req, res) => {
     })
   }
 })
-// ******* API Camera Writing routes **************
+
+router.get('/:index/:propID/allowed', (req, res) => {
+  debug(`sending allowed values for property ${req.params.propID} on camera ${req.params.index}`)
+  try {
+    const cameraProperty = getCameraProperty(parseInt(req.params.index), req.params.propID)
+    return res.json(cameraProperty.allowedValues)
+  } catch (e) {
+    CameraAPIError.respond(e, res, {
+      index: parseInt(req.params.index),
+      propID: req.params.propID
+    })
+  }
+})
+
+// ******* API Camera Reading routes **************
 
 // Expose the router for use in other files
 export default router
