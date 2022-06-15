@@ -86,6 +86,46 @@ router.post('/:index/:propID', (req, res) => {
     })
   }
 })
+
+router.post('/:index', (req, res) => {
+  debug(`Setting bulk properties for camera ${parseInt(req.params.index)}`)
+  if (!Array.isArray(req.body)) {
+    return res.status(400).json({
+      error: true,
+      message: 'Bad request: Body must be array of properties to set',
+      body: req.body
+    })
+  }
+
+  const results = {}
+  let failCount = 0
+  for (let i = 0; i < req.body.length; i++) {
+    const property = req.body[i]
+    if (typeof property.propID === 'string' && typeof property.value === 'string') {
+      try {
+        setCameraProperty(parseInt(req.params.index), property.propID, property.value)
+        results[property.propID] = { status: 'ok' }
+      } catch (error) {
+        results[property.propID] = { status: 'error', error: error.message }
+        failCount++
+      }
+    } else {
+      if (!results.unknown) {
+        results.unknown = [property]
+      } else {
+        results.unknown.push(property)
+      }
+    }
+  }
+
+  if (failCount > 0) {
+    return res.status(failCount >= req.body.length ? 400 : 200).json(
+      { error: true, ...results }
+    )
+  }
+
+  return res.json(results)
+})
 // ******* API Camera Writing routes **************
 
 // Expose the router for use in other files
