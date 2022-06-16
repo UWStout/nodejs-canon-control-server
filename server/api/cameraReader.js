@@ -12,7 +12,6 @@ import CameraAPIError from './CameraAPIError.js'
 
 // Setup debug for output
 import Debug from 'debug'
-import { getAEModeValues, getExposureCompValues } from './APIOptionsHelper.js'
 const debug = Debug('parsec:server:reader')
 
 // Create a router to attach to an express server app
