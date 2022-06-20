@@ -60,10 +60,10 @@ router.post('/:index/fullShutter', (req, res) => {
 router.post('/:index/syncTime', (req, res) => {
   debug(`Synchronizing date and time for camera ${parseInt(req.params.index)}`)
   const now = new Date()
-  const tzString = Intl.DateTimeFormat().resolvedOptions().timeZone
+  // const tzString = Intl.DateTimeFormat().resolvedOptions().timeZone
   try {
     setCameraProperty(parseInt(req.params.index), 'UTCTime', now)
-    setCameraProperty(parseInt(req.params.index), 'TimeZone', computeTZValue(tzString))
+    // setCameraProperty(parseInt(req.params.index), 'TimeZone', computeTZValue(tzString))
     return res.send({ status: 'OK' })
   } catch (err) {
     return CameraAPIError.respond(err, res, {
