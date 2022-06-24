@@ -4,8 +4,8 @@ import Express from 'express'
 import {
   setCameraProperty,
   takePicture,
-  pressShutterButton,
-  computeTZValue
+  pressShutterButton
+  // computeTZValue
 } from './APICameraHelper.js'
 
 import CameraAPIError from './CameraAPIError.js'
