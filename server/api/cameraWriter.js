@@ -10,9 +10,9 @@ import {
 
 import CameraAPIError from './CameraAPIError.js'
 
-// Setup debug for output
-import Debug from 'debug'
-const debug = Debug('parsec:server:writer')
+// Setup logging
+import { makeLogger } from '../util/logging.js'
+const log = makeLogger('server', 'writer')
 
 // Create a router to attach to an express server app
 const router = new Express.Router()
@@ -22,7 +22,7 @@ router.use(Express.json())
 
 // ******* API Camera Writing routes **************
 router.post('/:index/trigger', (req, res) => {
-  debug(`Triggering shutter for camera ${parseInt(req.params.index)}`)
+  log.info(`Triggering shutter for camera ${parseInt(req.params.index)}`)
   try {
     takePicture(parseInt(req.params.index))
     return res.send({ status: 'OK' })
@@ -34,7 +34,7 @@ router.post('/:index/trigger', (req, res) => {
 })
 
 router.post('/:index/halfShutter', (req, res) => {
-  debug(`Halfway shutter press for camera ${parseInt(req.params.index)}`)
+  log.info(`Halfway shutter press for camera ${parseInt(req.params.index)}`)
   try {
     pressShutterButton(parseInt(req.params.index), true)
     return res.send({ status: 'OK' })
@@ -46,7 +46,7 @@ router.post('/:index/halfShutter', (req, res) => {
 })
 
 router.post('/:index/fullShutter', (req, res) => {
-  debug(`Full shutter press for camera ${parseInt(req.params.index)}`)
+  log.info(`Full shutter press for camera ${parseInt(req.params.index)}`)
   try {
     pressShutterButton(parseInt(req.params.index))
     return res.send({ status: 'OK' })
@@ -58,7 +58,7 @@ router.post('/:index/fullShutter', (req, res) => {
 })
 
 router.post('/:index/syncTime', (req, res) => {
-  debug(`Synchronizing date and time for camera ${parseInt(req.params.index)}`)
+  log.info(`Synchronizing date and time for camera ${parseInt(req.params.index)}`)
   const now = new Date()
   // const tzString = Intl.DateTimeFormat().resolvedOptions().timeZone
   try {
@@ -74,7 +74,7 @@ router.post('/:index/syncTime', (req, res) => {
 })
 
 router.post('/:index/:propID', (req, res) => {
-  debug(`Setting ${req.params.propID} for camera ${parseInt(req.params.index)}`)
+  log.info(`Setting ${req.params.propID} for camera ${parseInt(req.params.index)}`)
   try {
     setCameraProperty(parseInt(req.params.index), req.params.propID, req.body.value)
     return res.send({ status: 'OK' })
@@ -88,7 +88,7 @@ router.post('/:index/:propID', (req, res) => {
 })
 
 router.post('/:index', (req, res) => {
-  debug(`Setting bulk properties for camera ${parseInt(req.params.index)}`)
+  log.info(`Setting bulk properties for camera ${parseInt(req.params.index)}`)
   if (!Array.isArray(req.body)) {
     return res.status(400).json({
       error: true,
