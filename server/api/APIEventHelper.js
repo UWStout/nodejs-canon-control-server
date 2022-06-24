@@ -13,7 +13,7 @@ export function setupEventMonitoring (eventCallback, updateCameraList = 0, log =
     camAPI.watchCameras(POLLING_INTERVAL_MS)
     log.info('Awaiting camera events')
   } catch (e) {
-    log.error('Error watching for camera connect/disconnect events:', e.message)
+    log.error(`Error watching for camera connect/disconnect events: ${e.message}`)
   }
 
   // Initiate periodic polling to update camera list
@@ -28,6 +28,6 @@ export function monitorCamera (camIndex, eventCallback, log = console) {
     const curCam = new camAPI.Camera(camIndex)
     curCam.setEventHandler(eventCallback)
   } catch (e) {
-    log.error('Error watching for camera events:', e.message)
+    log.error(`Error watching for camera events: ${e.message}`)
   }
 }

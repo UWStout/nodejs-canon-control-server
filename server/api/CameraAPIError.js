@@ -5,17 +5,17 @@ export default class CameraAPIError extends Error {
   }
 }
 
-CameraAPIError.respond = (err, res, extraData) => {
+CameraAPIError.respond = (err, res, log = console, extraData = {}) => {
   if (!err) {
-    console.error('CameraAPIError.respond called with undefined error object')
+    log.error('CameraAPIError.respond called with undefined error object')
     return
   }
 
   // Log generic SDK errors and internal errors
   if (!err.status || err.status === 500) {
-    console.error(err.message)
+    log.error(err.message)
     if (err.cause) {
-      console.error(err.cause.message)
+      log.error(err.cause.message)
     }
   }
 

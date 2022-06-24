@@ -47,7 +47,7 @@ export function setSocketServer (serverSocket) {
       // Switch on the type of event
       switch (eventName) {
         case camAPI.CameraBrowser.EventName.DownloadRequest:
-          log.info('Download request: camera', camIndex, file?.name)
+          log.info(`Download request: camera ${camIndex}, ${file?.name}`)
           if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
             const imgData = file?.downloadThumbnailToString()
             fs.writeFileSync(`./public/images/${file?.name}`, imgData, { encoding: 'utf8' })
@@ -55,15 +55,15 @@ export function setSocketServer (serverSocket) {
           break
 
         case camAPI.CameraBrowser.EventName.StateChange:
-          log.verbose('State change: camera', camIndex, stateEvent)
+          log.verbose(`State change: camera ${camIndex} ${stateEvent.toString()}`)
           break
 
         case camAPI.CameraBrowser.EventName.PropertyChangeValue:
-          log.verbose('Property value change: camera', camIndex, property)
+          log.verbose(`Property value change: camera ${camIndex} ${property.label}`)
           break
 
         case camAPI.CameraBrowser.EventName.PropertyChangeOptions:
-          log.verbose('Property options change: camera', camIndex, property)
+          log.verbose(`Property options change: camera ${camIndex} ${property.label}`)
           break
 
         case camAPI.CameraBrowser.EventName.CameraAdd:

@@ -1,6 +1,10 @@
 import camAPI from '@dimensional/napi-canon-cameras'
 import CameraAPIError from './CameraAPIError.js'
 
+// Setup logging
+import { makeLogger } from '../util/logging.js'
+const log = makeLogger('server', 'APIDevice')
+
 // Properties included for summary
 const SUMMARY_PROPS = [
   'ProductName',
@@ -129,7 +133,7 @@ export function getCameraInfo (index, summary = true) {
     // curCam.disconnect()
     return { index, portName: curCam.portName, ...props }
   } catch (e) {
-    console.error('Error getting properties', e)
+    log.error(`Error getting properties: ${e.message}`)
     throw new CameraAPIError(404, `Camera ${index} not found`)
   }
 }
@@ -172,10 +176,10 @@ function getProperties (cam, propList) {
           value: prop.value?.value === undefined ? prop.value : prop.value.value
         }
       } else {
-        console.error('Property not available:', key)
+        log.error(`Property not available: ${key}`)
       }
     } catch (e) {
-      throw new CameraAPIError(400, `Failed to retrieve property ${key}`, { cause: e })
+      throw new CameraAPIError(400, `Failed to retrieve property: ${key}`, { cause: e })
     }
   })
   return props
@@ -221,7 +225,6 @@ export function setCameraProperty (index, identifier, valueOrLabel) {
 
     // NOTE: Use the computeTZValue() function to help
     case 'timezone':
-      console.log(new camAPI.TimeZone(valueOrLabel))
       newProperties[camAPI.CameraProperty.ID.TimeZone] = new camAPI.TimeZone(valueOrLabel)
       break
 

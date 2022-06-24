@@ -27,7 +27,7 @@ router.post('/:index/trigger', (req, res) => {
     takePicture(parseInt(req.params.index))
     return res.send({ status: 'OK' })
   } catch (err) {
-    return CameraAPIError.respond(err, res, {
+    return CameraAPIError.respond(err, res, log, {
       index: parseInt(req.params.index)
     })
   }
@@ -39,7 +39,7 @@ router.post('/:index/halfShutter', (req, res) => {
     pressShutterButton(parseInt(req.params.index), true)
     return res.send({ status: 'OK' })
   } catch (err) {
-    return CameraAPIError.respond(err, res, {
+    return CameraAPIError.respond(err, res, log, {
       index: parseInt(req.params.index)
     })
   }
@@ -51,7 +51,7 @@ router.post('/:index/fullShutter', (req, res) => {
     pressShutterButton(parseInt(req.params.index))
     return res.send({ status: 'OK' })
   } catch (err) {
-    return CameraAPIError.respond(err, res, {
+    return CameraAPIError.respond(err, res, log, {
       index: parseInt(req.params.index)
     })
   }
@@ -66,7 +66,7 @@ router.post('/:index/syncTime', (req, res) => {
     // setCameraProperty(parseInt(req.params.index), 'TimeZone', computeTZValue(tzString))
     return res.send({ status: 'OK' })
   } catch (err) {
-    return CameraAPIError.respond(err, res, {
+    return CameraAPIError.respond(err, res, log, {
       index: parseInt(req.params.index),
       value: now.getTime()
     })
@@ -79,7 +79,7 @@ router.post('/:index/:propID', (req, res) => {
     setCameraProperty(parseInt(req.params.index), req.params.propID, req.body.value)
     return res.send({ status: 'OK' })
   } catch (err) {
-    return CameraAPIError.respond(err, res, {
+    return CameraAPIError.respond(err, res, log, {
       index: parseInt(req.params.index),
       identifier: req.params.propID,
       value: req.body.value

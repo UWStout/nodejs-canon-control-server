@@ -49,7 +49,7 @@ export function makeSocket (serverListener) {
 
   // Catch and log errors
   mySocket.on('error', (err) => {
-    log.error('Socket.io error:', err)
+    log.error(`Socket.io error: ${err.message}`)
   })
 
   // Return the socket.io interface
