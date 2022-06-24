@@ -22,8 +22,7 @@ const _DEV_ = (process.argv.find((arg) => { return arg === 'dev' }))
 const formatBase = [
   winston.format.timestamp(),
   winston.format.ms(),
-  winston.format.align(),
-  winston.format.printf(info => `${info.timestamp} ${info.ms} ${info.level} [${info.label}]: ${info.message}`)
+  winston.format.printf(info => `${info.timestamp} ${info.ms.padEnd(8, ' ')} ${info.level}\t[${info.label}]: ${info.message}`)
 ]
 const humanTextLogFormat = (colorize = true) => (
   (colorize
