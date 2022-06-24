@@ -29,15 +29,19 @@
     "debug": "^4.3.4",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
+    "express-winston": "^4.2.0",
     "morgan": "^1.10.0",
-    "nodemon": "^2.0.16",
-    "socket.io": "^4.5.1"
+    "socket.io": "^4.5.1",
+    "winston": "^3.8.0",
+    "winston-daily-rotate-file": "^4.7.1",
+    "winston-logzio": "^5.1.4"
   },
   "devDependencies": {
     "eslint": "^8.16.0",
     "eslint-config-standard": "^17.0.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^15.2.1",
-    "eslint-plugin-promise": "^6.0.0"
+    "eslint-plugin-promise": "^6.0.0",
+    "nodemon": "^2.0.18"
   }
 }

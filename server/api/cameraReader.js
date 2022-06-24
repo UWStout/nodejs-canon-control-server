@@ -10,16 +10,16 @@ import {
 
 import CameraAPIError from './CameraAPIError.js'
 
-// Setup debug for output
-import Debug from 'debug'
-const debug = Debug('parsec:server:reader')
+// Setup logging
+import { makeLogger } from '../util/logging.js'
+const log = makeLogger('server', 'reader')
 
 // Create a router to attach to an express server app
 const router = new Express.Router()
 
 // ******* API Camera Reading routes **************
 router.get('/', (req, res) => {
-  debug('sending camera summary list')
+  log.info('sending camera summary list')
   try {
     const cameras = getCameraSummaryList()
     return res.json(cameras)
@@ -29,7 +29,7 @@ router.get('/', (req, res) => {
 })
 
 router.get('/serials', (req, res) => {
-  debug('sending camera serial number lookup list')
+  log.info('sending camera serial number lookup list')
   try {
     return res.json(SNList)
   } catch (e) {
@@ -38,7 +38,7 @@ router.get('/serials', (req, res) => {
 })
 
 router.get('/ports', (req, res) => {
-  debug('sending camera port name lookup list')
+  log.info('sending camera port name lookup list')
   try {
     return res.json(portList)
   } catch (e) {
@@ -47,7 +47,7 @@ router.get('/ports', (req, res) => {
 })
 
 router.get('/:index', (req, res) => {
-  debug(`sending details for camera ${req.params.index}`)
+  log.info(`sending details for camera ${req.params.index}`)
   try {
     const cameraDetails = getCameraInfo(parseInt(req.params.index), false)
     return res.json(cameraDetails)
@@ -57,7 +57,7 @@ router.get('/:index', (req, res) => {
 })
 
 router.get('/:index/:propID', (req, res) => {
-  debug(`sending current value of property ${req.params.propID} on camera ${req.params.index}`)
+  log.info(`sending current value of property ${req.params.propID} on camera ${req.params.index}`)
   try {
     const cameraProperty = getCameraProperty(parseInt(req.params.index), req.params.propID)
     return res.json(cameraProperty)
@@ -70,7 +70,7 @@ router.get('/:index/:propID', (req, res) => {
 })
 
 router.get('/:index/:propID/allowed', (req, res) => {
-  debug(`sending allowed values for property ${req.params.propID} on camera ${req.params.index}`)
+  log.info(`sending allowed values for property ${req.params.propID} on camera ${req.params.index}`)
   try {
     const cameraProperty = getCameraProperty(parseInt(req.params.index), req.params.propID)
     return res.json(cameraProperty.allowedValues)

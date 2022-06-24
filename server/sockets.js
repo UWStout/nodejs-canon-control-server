@@ -7,9 +7,9 @@ import { enableSocketServer, setSocketServer, setupSocketClient } from './api/ca
 // Read env variables from the .env file
 import dotenv from 'dotenv'
 
-// Setup debug for output
-import Debug from 'debug'
-const debug = Debug('parsec:server:socket')
+// Setup logging
+import { makeLogger } from './util/logging.js'
+const log = makeLogger('server', 'socket')
 
 // Adjust env based on .env file
 dotenv.config()
@@ -22,7 +22,7 @@ export function getMySocket () {
 
 // Integrate our web-sockets route with the express server
 export function makeSocket (serverListener) {
-  debug('Setting up sockets')
+  log.info('Setting up sockets')
 
   // Setup web-sockets with session middleware
   mySocket = new io.Server(serverListener)
@@ -30,7 +30,7 @@ export function makeSocket (serverListener) {
 
   // Respond to new socket connections
   mySocket.on('connection', (socket) => {
-    debug(`[WS:${socket.id}] New ${socket.request.session.type} connection`)
+    log.verbose(`[WS:${socket.id}] New ${socket.request.session.type} connection`)
 
     // Configure our custom message responses
     setupSocketClient(socket)
@@ -49,8 +49,7 @@ export function makeSocket (serverListener) {
 
   // Catch and log errors
   mySocket.on('error', (err) => {
-    debug('Socket.io error:')
-    debug(err)
+    log.error('Socket.io error:', err)
   })
 
   // Return the socket.io interface
@@ -65,11 +64,11 @@ export function serverReady () {
 // Respond to socket.disconnect events
 // - 'this' = current socket
 function socketDisconnect (reason) {
-  debug(`[WS:${this.id}] ${this.request.session.type} disconnected because - ${reason}`)
+  log.verbose(`[WS:${this.id}] ${this.request.session.type} disconnected because - ${reason}`)
 }
 
 // Log the ping from a client
 // - 'this' = current socket
 function socketPing () {
-  debug(`[WS:${this.id}] websocket ping`)
+  log.verbose(`[WS:${this.id}] websocket ping`)
 }

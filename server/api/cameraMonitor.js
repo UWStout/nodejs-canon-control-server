@@ -7,9 +7,9 @@ import camAPI from '@dimensional/napi-canon-cameras'
 import { setupEventMonitoring } from './APIEventHelper.js'
 import { getCameraSummaryList, portList } from './APICameraHelper.js'
 
-// Setup debug for output
-import Debug from 'debug'
-const debug = Debug('parsec:server:monitor')
+// Setup logging
+import { makeLogger } from '../util/logging.js'
+const log = makeLogger('server', 'monitor')
 
 // Store local copy of server socket
 let lastServerSocket = null
@@ -23,7 +23,7 @@ export function enableSocketServer (enable) {
 
   // When enabling, send latest camera list
   if (serverEnabled && lastServerSocket) {
-    debug('Relaying updated camera list')
+    log.verbose('Relaying updated camera list')
     lastServerSocket.emit('CameraList', getCameraSummaryList())
   }
 }
@@ -33,7 +33,7 @@ export function setSocketServer (serverSocket) {
   lastServerSocket = serverSocket
   if (serverSocket) {
     // Install camera event monitoring
-    debug('Setting up camera event monitoring')
+    log.info('Setting up camera event monitoring')
     setupEventMonitoring((eventName, ...args) => {
       if (!serverEnabled) { return }
 
@@ -47,7 +47,7 @@ export function setSocketServer (serverSocket) {
       // Switch on the type of event
       switch (eventName) {
         case camAPI.CameraBrowser.EventName.DownloadRequest:
-          debug('Download request: camera', camIndex, file?.name)
+          log.info('Download request: camera', camIndex, file?.name)
           if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
             const imgData = file?.downloadThumbnailToString()
             fs.writeFileSync(`./public/images/${file?.name}`, imgData, { encoding: 'utf8' })
@@ -55,25 +55,25 @@ export function setSocketServer (serverSocket) {
           break
 
         case camAPI.CameraBrowser.EventName.StateChange:
-          // debug('State change: camera', camIndex, stateEvent)
+          log.verbose('State change: camera', camIndex, stateEvent)
           break
 
         case camAPI.CameraBrowser.EventName.PropertyChangeValue:
-          // debug('Property value change: camera', camIndex, property)
+          log.verbose('Property value change: camera', camIndex, property)
           break
 
         case camAPI.CameraBrowser.EventName.PropertyChangeOptions:
-          // debug('Property options change: camera', camIndex, property)
+          log.verbose('Property options change: camera', camIndex, property)
           break
 
         case camAPI.CameraBrowser.EventName.CameraAdd:
         case camAPI.CameraBrowser.EventName.CameraRemove: {
-          debug('Relaying updated camera list')
+          log.verbose('Relaying updated camera list')
           const camList = getCameraSummaryList()
           serverSocket.emit('CameraList', camList)
         } break
       }
-    }, 500, debug)
+    }, 500, log)
   }
 }
 
