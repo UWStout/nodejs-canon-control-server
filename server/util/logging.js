@@ -107,6 +107,8 @@ const allFileTransports = [
 
 // Construct a logger config with our intended format and transports
 const makeConfig = (label) => ({
+  handleExceptions: true,
+  exitOnError: false,
   format: winston.format.combine(
     winston.format.label({ label }),
     serverName({ serverName: HOST_NICKNAME })
@@ -134,7 +136,7 @@ const expressLogger = ExpressWinston.logger({
 export function makeLogger (systemName, subsystemName) {
   // Were strings provided for the parameters?
   if (typeof systemName !== 'string' || typeof subsystemName !== 'string') {
-    throw new Error('Must provide strings for system name and subsystem anme to makeLogger')
+    throw new Error('Must provide strings for system name and subsystem name to makeLogger')
   }
 
   // Are the strings non-empty?
