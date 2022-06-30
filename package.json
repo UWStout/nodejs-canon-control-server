@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "server": "node server/server.js",
-    "server:dev": "nodemon --watch server server/server.js dev verbose",
+    "server:dev": "nodemon --watch server server/server.js dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
