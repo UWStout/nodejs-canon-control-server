@@ -8,7 +8,7 @@ import {
   getCameraProperty
 } from '../camSDK/SDKCameraHelper.js'
 
-import CameraAPIError from './CameraAPIError.js'
+import RESTAPIError from './RESTAPIError.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
@@ -24,7 +24,7 @@ router.get('/', (req, res) => {
     const cameras = getCameraSummaryList()
     return res.json(cameras)
   } catch (e) {
-    CameraAPIError.respond(e, res, log)
+    RESTAPIError.respond(e, res, log)
   }
 })
 
@@ -33,7 +33,7 @@ router.get('/serials', (req, res) => {
   try {
     return res.json(SNList)
   } catch (e) {
-    CameraAPIError.respond(e, res, log)
+    RESTAPIError.respond(e, res, log)
   }
 })
 
@@ -42,7 +42,7 @@ router.get('/ports', (req, res) => {
   try {
     return res.json(portList)
   } catch (e) {
-    CameraAPIError.respond(e, res, log)
+    RESTAPIError.respond(e, res, log)
   }
 })
 
@@ -52,7 +52,7 @@ router.get('/:index', (req, res) => {
     const cameraDetails = getCameraInfo(parseInt(req.params.index), false)
     return res.json(cameraDetails)
   } catch (e) {
-    CameraAPIError.respond(e, res, log)
+    RESTAPIError.respond(e, res, log)
   }
 })
 
@@ -62,7 +62,7 @@ router.get('/:index/:propID', (req, res) => {
     const cameraProperty = getCameraProperty(parseInt(req.params.index), req.params.propID)
     return res.json(cameraProperty)
   } catch (e) {
-    CameraAPIError.respond(e, res, log, {
+    RESTAPIError.respond(e, res, log, {
       index: parseInt(req.params.index),
       propID: req.params.propID
     })
@@ -75,7 +75,7 @@ router.get('/:index/:propID/allowed', (req, res) => {
     const cameraProperty = getCameraProperty(parseInt(req.params.index), req.params.propID)
     return res.json(cameraProperty.allowedValues)
   } catch (e) {
-    CameraAPIError.respond(e, res, log, {
+    RESTAPIError.respond(e, res, log, {
       index: parseInt(req.params.index),
       propID: req.params.propID
     })

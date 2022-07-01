@@ -1,13 +1,13 @@
-export default class CameraAPIError extends Error {
+export default class RESTAPIError extends Error {
   constructor (status = 500, ...rest) {
     super(...rest)
     this.status = status
   }
 }
 
-CameraAPIError.respond = (err, res, log = console, extraData = {}) => {
+RESTAPIError.respond = (err, res, log = console, extraData = {}) => {
   if (!err) {
-    log.error('CameraAPIError.respond called with undefined error object')
+    log.error('RESTAPIError.respond called with undefined error object')
     return
   }
 

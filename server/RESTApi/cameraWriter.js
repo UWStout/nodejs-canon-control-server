@@ -8,7 +8,7 @@ import {
   // computeTZValue
 } from '../camSDK/SDKCameraHelper.js'
 
-import CameraAPIError from './CameraAPIError.js'
+import RESTAPIError from './RESTAPIError.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
@@ -27,7 +27,7 @@ function validateIndex (req, message = 'Writing') {
   } else if (!isNaN(index)) {
     log.info(`${message} for camera ${index}`)
   } else {
-    throw new CameraAPIError(400, 'Invalid index type. Must be an integer or *')
+    throw new RESTAPIError(400, 'Invalid index type. Must be an integer or *')
   }
 
   return index
@@ -40,7 +40,7 @@ router.post('/:index/trigger', (req, res) => {
     takePicture(isNaN(index) ? '*' : index)
     return res.send({ status: 'OK' })
   } catch (err) {
-    return CameraAPIError.respond(err, res, log, { index: req.params.index })
+    return RESTAPIError.respond(err, res, log, { index: req.params.index })
   }
 })
 
@@ -50,7 +50,7 @@ router.post('/:index/halfShutter', (req, res) => {
     pressShutterButton(isNaN(index) ? '*' : index, true)
     return res.send({ status: 'OK' })
   } catch (err) {
-    return CameraAPIError.respond(err, res, log, { index: req.params.index })
+    return RESTAPIError.respond(err, res, log, { index: req.params.index })
   }
 })
 
@@ -60,7 +60,7 @@ router.post('/:index/fullShutter', (req, res) => {
     pressShutterButton(isNaN(index) ? '*' : index)
     return res.send({ status: 'OK' })
   } catch (err) {
-    return CameraAPIError.respond(err, res, log, { index: req.params.index })
+    return RESTAPIError.respond(err, res, log, { index: req.params.index })
   }
 })
 
@@ -73,7 +73,7 @@ router.post('/:index/syncTime', (req, res) => {
     // setCameraProperty(isNaN(index) ? '*' : index, 'TimeZone', computeTZValue(tzString))
     return res.send({ status: 'OK' })
   } catch (err) {
-    return CameraAPIError.respond(err, res, log, { index: req.params.index, value: now.getTime() })
+    return RESTAPIError.respond(err, res, log, { index: req.params.index, value: now.getTime() })
   }
 })
 
@@ -83,7 +83,7 @@ router.post('/:index/:propID', (req, res) => {
     setCameraProperty(isNaN(index) ? '*' : index, req.params.propID, req.body.value)
     return res.send({ status: 'OK' })
   } catch (err) {
-    return CameraAPIError.respond(err, res, log, {
+    return RESTAPIError.respond(err, res, log, {
       index: req.params.index,
       identifier: req.params.propID,
       value: req.body.value
@@ -127,7 +127,7 @@ router.post('/:index', (req, res) => {
 
     return res.json(results)
   } catch (err) {
-    return CameraAPIError.respond(err, res, log, { index: req.params.index, body: req.body })
+    return RESTAPIError.respond(err, res, log, { index: req.params.index, body: req.body })
   }
 })
 // ******* API Camera Writing routes **************

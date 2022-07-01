@@ -1,5 +1,5 @@
-import camAPI from '@dimensional/napi-canon-cameras'
-import CameraAPIError from '../RESTApi/CameraAPIError.js'
+import camSDK from '@dimensional/napi-canon-cameras'
+import RESTAPIError from '../RESTApi/RESTAPIError.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
@@ -58,29 +58,34 @@ export let portList = []
 function getCameraList (index) {
   // Build list of cameras
   if (index === '*') {
-    return camAPI.cameraBrowser.getCameras()
+    return camSDK.cameraBrowser.getCameras()
   }
 
-  return [new camAPI.Camera(index)]
+  return [new camSDK.Camera(index)]
 }
 
 /**
  * Instruct a camera to take a picture (may trigger an image download if save-to is set to HOST)
  * @param {number} index The zero-based index of the camera to trigger the shutter for
  */
-export function takePicture (index) {
+export async function takePicture (index) {
   try {
     const camList = getCameraList(index)
-    camList.forEach(cam => {
-      cam.connect()
-      cam.takePicture()
-      // cam.disconnect()
-    })
+    await Promise.allSettled(camList.map(cam => {
+      return new Promise((resolve, reject) => {
+        try {
+          cam.takePicture()
+          return resolve()
+        } catch (err) {
+          return reject(err)
+        }
+      })
+    }))
   } catch (e) {
     if (e.message.includes('DEVICE_NOT_FOUND')) {
-      throw new CameraAPIError(404, `Camera ${index} not found`)
+      throw new RESTAPIError(404, `Camera ${index} not found`)
     } else {
-      throw new CameraAPIError(500, `Failed to trigger shutter for camera ${index}`, { cause: e })
+      throw new RESTAPIError(500, `Failed to trigger shutter for camera ${index}`, { cause: e })
     }
   }
 }
@@ -90,21 +95,26 @@ export function takePicture (index) {
  * @param {number} index The zero-based index of the camera to press the shutter for
  * @param {boolean} halfway Press the shutter button only halfway (triggers auto-focus)
  */
-export function pressShutterButton (index, halfway = false) {
-  const pressType = (halfway ? camAPI.Camera.PressShutterButton.Halfway : camAPI.Camera.PressShutterButton.CompletelyNonAF)
+export async function pressShutterButton (index, halfway = false) {
+  const pressType = (halfway ? camSDK.Camera.PressShutterButton.Halfway : camSDK.Camera.PressShutterButton.CompletelyNonAF)
   try {
     const camList = getCameraList(index)
-    camList.forEach(cam => {
-      cam.connect()
-      cam.sendCommand(camAPI.Camera.Command.PressShutterButton, pressType)
-      cam.sendCommand(camAPI.Camera.Command.PressShutterButton, camAPI.Camera.PressShutterButton.OFF)
-      // cam.disconnect()
-    })
+    await Promise.allSettled(camList.map(cam => {
+      return new Promise((resolve, reject) => {
+        try {
+          cam.sendCommand(camSDK.Camera.Command.PressShutterButton, pressType)
+          cam.sendCommand(camSDK.Camera.Command.PressShutterButton, camSDK.Camera.PressShutterButton.OFF)
+          return resolve()
+        } catch (err) {
+          return reject(err)
+        }
+      })
+    }))
   } catch (e) {
     if (e.message.includes('DEVICE_NOT_FOUND')) {
-      throw new CameraAPIError(404, `Camera ${index} not found`)
+      throw new RESTAPIError(404, `Camera ${index} not found`)
     } else {
-      throw new CameraAPIError(500, `Failed to press shutter button ${halfway ? 'halfway ' : ''}for camera ${index}`, { cause: e })
+      throw new RESTAPIError(500, `Failed to press shutter button ${halfway ? 'halfway ' : ''}for camera ${index}`, { cause: e })
     }
   }
 }
@@ -115,8 +125,8 @@ export function pressShutterButton (index, halfway = false) {
  */
 export function getCameraSummaryList () {
   // Get camera list
-  camAPI.cameraBrowser.update()
-  const camList = camAPI.cameraBrowser.getCameras()
+  camSDK.cameraBrowser.update()
+  const camList = camSDK.cameraBrowser.getCameras()
 
   // Convert each camera to just its basic summary info
   const cameras = camList.map((_, i) => getCameraInfo(i))
@@ -136,14 +146,14 @@ export function getCameraSummaryList () {
 export function getCameraInfo (index, summary = true) {
   // Connect to camera
   try {
-    const curCam = new camAPI.Camera(index)
+    const curCam = new camSDK.Camera(index)
     curCam.connect()
     const props = getProperties(curCam, summary ? SUMMARY_PROPS : FULL_PROPS)
     // curCam.disconnect()
     return { index, portName: curCam.portName, ...props }
   } catch (e) {
     log.error(`Error getting properties: ${e.message}`)
-    throw new CameraAPIError(404, `Camera ${index} not found`)
+    throw new RESTAPIError(404, `Camera ${index} not found`)
   }
 }
 
@@ -156,20 +166,20 @@ export function getCameraInfo (index, summary = true) {
 export function getCameraProperty (index, propID) {
   let cam = null
   try {
-    cam = new camAPI.Camera(index)
+    cam = new camSDK.Camera(index)
     cam.connect()
-    const prop = cam.getProperty(camAPI.CameraProperty.ID[propID])
+    const prop = cam.getProperty(camSDK.CameraProperty.ID[propID])
     // cam.disconnect()
     if (prop.available) {
       return prop
     }
-    throw new CameraAPIError(400, `Property not available: ${propID}`)
+    throw new RESTAPIError(400, `Property not available: ${propID}`)
   } catch (e) {
     // if (cam) { cam.disconnect() }
     if (e.message.includes('DEVICE_NOT_FOUND')) {
-      throw new CameraAPIError(404, `Camera ${index} not found`)
+      throw new RESTAPIError(404, `Camera ${index} not found`)
     } else {
-      throw new CameraAPIError(400, `Failed to retrieve property: ${propID}`, { cause: e })
+      throw new RESTAPIError(400, `Failed to retrieve property: ${propID}`, { cause: e })
     }
   }
 }
@@ -178,7 +188,7 @@ function getProperties (cam, propList) {
   const props = {}
   propList.forEach((key) => {
     try {
-      const prop = cam.getProperty(camAPI.CameraProperty.ID[key])
+      const prop = cam.getProperty(camSDK.CameraProperty.ID[key])
       if (prop.available) {
         props[key] = {
           label: prop.value?.label,
@@ -188,7 +198,7 @@ function getProperties (cam, propList) {
         log.error(`Property not available: ${key}`)
       }
     } catch (e) {
-      throw new CameraAPIError(400, `Failed to retrieve property: ${key}`, { cause: e })
+      throw new RESTAPIError(400, `Failed to retrieve property: ${key}`, { cause: e })
     }
   })
   return props
@@ -200,51 +210,51 @@ export function setCameraProperty (index, identifier, valueOrLabel) {
   switch (identifier.toLowerCase()) {
     case 'av':
     case 'aperture': {
-      const value = camAPI.Aperture.forLabel(valueOrLabel)?.value
-      if (!value) { throw new CameraAPIError(400, `Unknown aperture value: ${valueOrLabel}`) }
-      newProperties[camAPI.CameraProperty.ID.Av] = value
+      const value = camSDK.Aperture.forLabel(valueOrLabel)?.value
+      if (!value) { throw new RESTAPIError(400, `Unknown aperture value: ${valueOrLabel}`) }
+      newProperties[camSDK.CameraProperty.ID.Av] = value
     } break
 
     case 'tv':
     case 'shutterspeed': {
-      const value = camAPI.ShutterSpeed.forLabel(valueOrLabel)?.value
-      if (!value) { throw new CameraAPIError(400, `Unknown shutter speed value: ${valueOrLabel}`) }
-      newProperties[camAPI.CameraProperty.ID.Tv] = value
+      const value = camSDK.ShutterSpeed.forLabel(valueOrLabel)?.value
+      if (!value) { throw new RESTAPIError(400, `Unknown shutter speed value: ${valueOrLabel}`) }
+      newProperties[camSDK.CameraProperty.ID.Tv] = value
     } break
 
     case 'iso':
     case 'isosensitivity': {
-      const value = camAPI.ISOSensitivity.forLabel(valueOrLabel)?.value
-      if (!value) { throw new CameraAPIError(400, `Unknown ISO value: ${valueOrLabel}`) }
-      newProperties[camAPI.CameraProperty.ID.ISOSensitivity] = value
+      const value = camSDK.ISOSensitivity.forLabel(valueOrLabel)?.value
+      if (!value) { throw new RESTAPIError(400, `Unknown ISO value: ${valueOrLabel}`) }
+      newProperties[camSDK.CameraProperty.ID.ISOSensitivity] = value
     } break
 
     case 'imagequality': {
-      const value = camAPI.ImageQuality.ID[valueOrLabel]
-      if (!value) { throw new CameraAPIError(400, `Unknown Image Quality value: ${valueOrLabel}`) }
-      newProperties[camAPI.CameraProperty.ID.ImageQuality] = value
+      const value = camSDK.ImageQuality.ID[valueOrLabel]
+      if (!value) { throw new RESTAPIError(400, `Unknown Image Quality value: ${valueOrLabel}`) }
+      newProperties[camSDK.CameraProperty.ID.ImageQuality] = value
     } break
 
     case 'exposure':
     case 'exposurecompensation': {
-      const value = camAPI.ExposureCompensation.forLabel(valueOrLabel).value
-      if (!value) { throw new CameraAPIError(400, `Unknown Exposure Compensation value: ${valueOrLabel}`) }
-      newProperties[camAPI.CameraProperty.ID.ExposureCompensation] = value
+      const value = camSDK.ExposureCompensation.forLabel(valueOrLabel).value
+      if (!value) { throw new RESTAPIError(400, `Unknown Exposure Compensation value: ${valueOrLabel}`) }
+      newProperties[camSDK.CameraProperty.ID.ExposureCompensation] = value
     } break
 
     // NOTE: Use the computeTZValue() function to help
     case 'timezone':
-      newProperties[camAPI.CameraProperty.ID.TimeZone] = new camAPI.TimeZone(valueOrLabel)
+      newProperties[camSDK.CameraProperty.ID.TimeZone] = new camSDK.TimeZone(valueOrLabel)
       break
 
     // Assume anything else is an 'Option'
     default: {
       let value = valueOrLabel
       if (typeof value === 'string') {
-        value = camAPI.Option[identifier]?.[valueOrLabel]
-        if (!value) { throw new CameraAPIError(400, `Unknown property (${identifier}) or value: ${valueOrLabel}`) }
+        value = camSDK.Option[identifier]?.[valueOrLabel]
+        if (!value) { throw new RESTAPIError(400, `Unknown property (${identifier}) or value: ${valueOrLabel}`) }
       }
-      newProperties[camAPI.CameraProperty.ID[identifier]] = value
+      newProperties[camSDK.CameraProperty.ID[identifier]] = value
     } break
   }
 
@@ -259,9 +269,9 @@ export function setCameraProperty (index, identifier, valueOrLabel) {
     return true
   } catch (e) {
     if (e.message.includes('DEVICE_NOT_FOUND')) {
-      throw new CameraAPIError(404, `Camera ${index} not found`)
+      throw new RESTAPIError(404, `Camera ${index} not found`)
     } else {
-      throw new CameraAPIError(500, 'Internal SDK Error', { cause: e })
+      throw new RESTAPIError(500, 'Internal SDK Error', { cause: e })
     }
   }
 }
@@ -273,7 +283,7 @@ export function computeTZValue (tzString, tzOffset) {
   }
 
   if (!standardName) {
-    throw new CameraAPIError(400, `Could not match timezone ${tzString} and/or offset ${tzOffset}`)
+    throw new RESTAPIError(400, `Could not match timezone ${tzString} and/or offset ${tzOffset}`)
   }
 
   return magicTZValue[standardName]
@@ -282,14 +292,14 @@ export function computeTZValue (tzString, tzOffset) {
 function searchTZNames (tzString) {
   if (!tzString) return undefined
 
-  const key = Object.keys(camAPI.TimeZone.Zones).find(
+  const key = Object.keys(camSDK.TimeZone.Zones).find(
     zoneVal => {
-      const strZone = camAPI.TimeZone.Zones[zoneVal]
+      const strZone = camSDK.TimeZone.Zones[zoneVal]
       return tzString.toLowerCase().includes(strZone.toLowerCase())
     }
   )
 
-  if (key) { return camAPI.TimeZone.Zones[key] }
+  if (key) { return camSDK.TimeZone.Zones[key] }
   return undefined
 }
 
