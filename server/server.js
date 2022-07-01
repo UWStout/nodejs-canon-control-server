@@ -9,8 +9,8 @@ import Express from 'express'
 import Cors from 'cors'
 
 // Standard HTTP routes
-import camReadRouter from './api/cameraReader.js'
-import camWriteRouter from './api/cameraWriter.js'
+import camReadRouter from './RESTApi/cameraReader.js'
+import camWriteRouter from './RESTApi/cameraWriter.js'
 
 import { makeSocket, serverReady } from './sockets.js'
 

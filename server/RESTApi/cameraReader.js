@@ -6,7 +6,7 @@ import {
   getCameraSummaryList,
   getCameraInfo,
   getCameraProperty
-} from './APICameraHelper.js'
+} from '../camSDK/SDKCameraHelper.js'
 
 import CameraAPIError from './CameraAPIError.js'
 

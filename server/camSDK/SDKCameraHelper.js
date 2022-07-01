@@ -1,5 +1,5 @@
 import camAPI from '@dimensional/napi-canon-cameras'
-import CameraAPIError from './CameraAPIError.js'
+import CameraAPIError from '../RESTApi/CameraAPIError.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
@@ -55,19 +55,28 @@ const FULL_PROPS = [
 export let SNList = []
 export let portList = []
 
+function getCameraList (index) {
+  // Build list of cameras
+  if (index === '*') {
+    return camAPI.cameraBrowser.getCameras()
+  }
+
+  return [new camAPI.Camera(index)]
+}
+
 /**
  * Instruct a camera to take a picture (may trigger an image download if save-to is set to HOST)
  * @param {number} index The zero-based index of the camera to trigger the shutter for
  */
 export function takePicture (index) {
-  let cam = null
   try {
-    cam = new camAPI.Camera(index)
-    cam.connect()
-    cam.takePicture()
-    // cam.disconnect()
+    const camList = getCameraList(index)
+    camList.forEach(cam => {
+      cam.connect()
+      cam.takePicture()
+      // cam.disconnect()
+    })
   } catch (e) {
-    // if (cam) { cam.disconnect() }
     if (e.message.includes('DEVICE_NOT_FOUND')) {
       throw new CameraAPIError(404, `Camera ${index} not found`)
     } else {
@@ -82,16 +91,16 @@ export function takePicture (index) {
  * @param {boolean} halfway Press the shutter button only halfway (triggers auto-focus)
  */
 export function pressShutterButton (index, halfway = false) {
-  let cam = null
   const pressType = (halfway ? camAPI.Camera.PressShutterButton.Halfway : camAPI.Camera.PressShutterButton.CompletelyNonAF)
   try {
-    cam = new camAPI.Camera(index)
-    cam.connect()
-    cam.sendCommand(camAPI.Camera.Command.PressShutterButton, pressType)
-    cam.sendCommand(camAPI.Camera.Command.PressShutterButton, camAPI.Camera.PressShutterButton.OFF)
-    // cam.disconnect()
+    const camList = getCameraList(index)
+    camList.forEach(cam => {
+      cam.connect()
+      cam.sendCommand(camAPI.Camera.Command.PressShutterButton, pressType)
+      cam.sendCommand(camAPI.Camera.Command.PressShutterButton, camAPI.Camera.PressShutterButton.OFF)
+      // cam.disconnect()
+    })
   } catch (e) {
-    // if (cam) { cam.disconnect() }
     if (e.message.includes('DEVICE_NOT_FOUND')) {
       throw new CameraAPIError(404, `Camera ${index} not found`)
     } else {
@@ -240,15 +249,15 @@ export function setCameraProperty (index, identifier, valueOrLabel) {
   }
 
   // Attempt to set property
-  let cam = null
   try {
-    cam = new camAPI.Camera(index)
-    cam.connect()
-    cam.setProperties(newProperties)
-    // cam.disconnect()
+    const camList = getCameraList(index)
+    camList.forEach(cam => {
+      cam.connect()
+      cam.setProperties(newProperties)
+      // cam.disconnect()
+    })
     return true
   } catch (e) {
-    // if (cam) { cam.disconnect() }
     if (e.message.includes('DEVICE_NOT_FOUND')) {
       throw new CameraAPIError(404, `Camera ${index} not found`)
     } else {

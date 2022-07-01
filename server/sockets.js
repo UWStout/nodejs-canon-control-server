@@ -2,7 +2,7 @@
 import * as io from 'socket.io'
 
 // Web socket message handler
-import { enableSocketServer, setSocketServer, setupSocketClient } from './api/cameraMonitor.js'
+import { enableSocketServer, setSocketServer, setupSocketClient } from './RESTApi/cameraMonitor.js'
 
 // Read env variables from the .env file
 import dotenv from 'dotenv'

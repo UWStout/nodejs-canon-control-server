@@ -4,8 +4,8 @@ import fs from 'fs'
 import camAPI from '@dimensional/napi-canon-cameras'
 
 // API Helper interface
-import { setupEventMonitoring } from './APIEventHelper.js'
-import { getCameraSummaryList, portList } from './APICameraHelper.js'
+import { setupEventMonitoring } from '../camSDK/SDKEventHelper.js'
+import { getCameraSummaryList, portList } from '../camSDK/SDKCameraHelper.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
