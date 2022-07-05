@@ -8,8 +8,16 @@ import { setupEventMonitoring } from '../camSDK/SDKEventHelper.js'
 import { getCameraSummaryList, portList } from '../camSDK/SDKCameraHelper.js'
 
 // Setup logging
+import dotenv from 'dotenv'
 import { makeLogger } from '../util/logging.js'
 const log = makeLogger('server', 'monitor')
+
+// Update environment variables
+dotenv.config()
+const HOST_NICKNAME = process.env.HOST_NICKNAME || 'nickname'
+const HOST_NAME = process.env.HOST_NAME || 'localhost'
+const DEV_PORT = process.env.DEV_PORT || 3000
+const PROD_PORT = process.env.PROD_PORT || 42424
 
 // Store local copy of server socket
 let lastServerSocket = null
@@ -51,7 +59,7 @@ export function setSocketServer (serverSocket) {
           if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
             const imgData = file?.downloadThumbnailToString()
             const imgBuffer = Buffer.from(imgData, 'base64')
-            fs.writeFileSync(`./public/images/${file?.name}`, imgBuffer, { encoding: 'utf8' })
+            fs.writeFileSync(`./public/images/SUB_${HOST_NICKNAME}_IDX_${camIndex}_${file?.name}`, imgBuffer, { encoding: 'utf8' })
           }
           break
 
