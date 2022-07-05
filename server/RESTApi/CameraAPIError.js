@@ -1,7 +1,8 @@
 export default class CameraAPIError extends Error {
-  constructor (status = 500, ...rest) {
+  constructor (status = 500, results = {}, ...rest) {
     super(...rest)
     this.status = status
+    this.results = results
   }
 }
 
@@ -24,6 +25,7 @@ CameraAPIError.respond = (err, res, log = console, extraData = {}) => {
     error: true,
     message: err.message,
     cause: err.cause?.message,
+    results: err.results || undefined,
     ...extraData
   })
 }
