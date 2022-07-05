@@ -213,6 +213,7 @@ export function setCameraProperty (index, identifier, valueOrLabel) {
     } break
 
     case 'iso':
+    case 'isospeed':
     case 'isosensitivity': {
       const value = camAPI.ISOSensitivity.forLabel(valueOrLabel)?.value
       if (!value) { throw new CameraAPIError(400, `Unknown ISO value: ${valueOrLabel}`) }
