@@ -4,8 +4,8 @@ import EDSDKRunner from './server/camSDK/SDKWorkerController.js'
 const run = async () => {
   try {
     const result = await Promise.all(
-      [0, 23].map(index =>
-        EDSDKRunner({ index, pressType: camSDK.Camera.PressShutterButton.Halfway })
+      [1, 2, 3].map(index =>
+        EDSDKRunner({ index, pressType: camSDK.Camera.PressShutterButton.CompletelyNonAF })
       )
     )
     console.log(result)
