@@ -50,7 +50,8 @@ export function setSocketServer (serverSocket) {
           log.info(`Download request: camera ${camIndex}, ${file?.name}`)
           if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
             const imgData = file?.downloadThumbnailToString()
-            fs.writeFileSync(`./public/images/${file?.name}`, imgData, { encoding: 'utf8' })
+            const imgBuffer = Buffer.from(imgData, 'base64')
+            fs.writeFileSync(`./public/images/${file?.name}`, imgBuffer, { encoding: 'utf8' })
           }
           break
 
