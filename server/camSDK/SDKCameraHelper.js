@@ -107,7 +107,7 @@ export async function takePicture (index) {
 
     const summary = summarizeResults(results)
     if (summary.succeeded === 0) {
-      throw new CameraAPIError(500, null, 'Failed to take picture', results)
+      throw new CameraAPIError(500, results, 'Failed to take picture')
     }
     return summary
   } catch (e) {
@@ -147,7 +147,7 @@ export async function pressShutterButton (index, halfway = false) {
 
     const summary = summarizeResults(results)
     if (summary.succeeded === 0) {
-      throw new CameraAPIError(500, null, 'Failed to press shutter button', results)
+      throw new CameraAPIError(500, results, 'Failed to press shutter button')
     }
     return summary
   } catch (e) {
@@ -278,7 +278,7 @@ export async function setCameraProperties (index, settingsObj) {
         if (typeof value !== 'number') {
           throw new CameraAPIError(400, null, `Unknown ISO value: ${valueOrLabel}`)
         }
-        newProperties[camAPI.CameraProperty.ID.ISOSensitivity] = value
+        newProperties[camAPI.CameraProperty.ID.ISOSpeed] = value
       } break
 
       case 'imagequality': {
@@ -335,7 +335,7 @@ export async function setCameraProperties (index, settingsObj) {
 
     const summary = summarizeResults(results)
     if (summary.succeeded === 0) {
-      throw new CameraAPIError(500, null, 'Failed to set properties', results)
+      throw new CameraAPIError(500, results, 'Failed to set properties')
     }
     return summary
   } catch (e) {
