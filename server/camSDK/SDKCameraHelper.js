@@ -247,62 +247,69 @@ function getProperties (cam, propList) {
   return props
 }
 
-export async function setCameraProperty (index, identifier, valueOrLabel) {
+export async function setCameraProperty (index, identifier, value) {
+  return await setCameraProperties(index, { [identifier]: value })
+}
+
+export async function setCameraProperties (index, settingsObj) {
   // Build properties object
   const newProperties = {}
-  switch (identifier.toLowerCase()) {
-    case 'av':
-    case 'aperture': {
-      const value = camAPI.Aperture.forLabel(valueOrLabel)?.value
-      if (!value) { throw new CameraAPIError(400, null, `Unknown aperture value: ${valueOrLabel}`) }
-      newProperties[camAPI.CameraProperty.ID.Av] = value
-    } break
+  Object.keys(settingsObj).forEach(identifier => {
+    const valueOrLabel = settingsObj[identifier]
+    switch (identifier.toLowerCase()) {
+      case 'av':
+      case 'aperture': {
+        const value = camAPI.Aperture.forLabel(valueOrLabel)?.value
+        if (!value) { throw new CameraAPIError(400, null, `Unknown aperture value: ${valueOrLabel}`) }
+        newProperties[camAPI.CameraProperty.ID.Av] = value
+      } break
 
-    case 'tv':
-    case 'shutterspeed': {
-      const value = camAPI.ShutterSpeed.forLabel(valueOrLabel)?.value
-      if (!value) { throw new CameraAPIError(400, null, `Unknown shutter speed value: ${valueOrLabel}`) }
-      newProperties[camAPI.CameraProperty.ID.Tv] = value
-    } break
+      case 'tv':
+      case 'shutterspeed': {
+        const value = camAPI.ShutterSpeed.forLabel(valueOrLabel)?.value
+        if (!value) { throw new CameraAPIError(400, null, `Unknown shutter speed value: ${valueOrLabel}`) }
+        newProperties[camAPI.CameraProperty.ID.Tv] = value
+      } break
 
-    case 'iso':
-    case 'isospeed':
-    case 'isosensitivity': {
-      const value = camAPI.ISOSensitivity.forLabel(valueOrLabel)?.value
-      if (!value) { throw new CameraAPIError(400, null, `Unknown ISO value: ${valueOrLabel}`) }
-      newProperties[camAPI.CameraProperty.ID.ISOSensitivity] = value
-    } break
+      case 'iso':
+      case 'isospeed':
+      case 'isosensitivity': {
+        const value = camAPI.ISOSensitivity.forLabel(valueOrLabel)?.value
+        if (!value) { throw new CameraAPIError(400, null, `Unknown ISO value: ${valueOrLabel}`) }
+        newProperties[camAPI.CameraProperty.ID.ISOSensitivity] = value
+      } break
 
-    case 'imagequality': {
-      const value = camAPI.ImageQuality.ID[valueOrLabel]
-      if (!value) { throw new CameraAPIError(400, null, `Unknown Image Quality value: ${valueOrLabel}`) }
-      newProperties[camAPI.CameraProperty.ID.ImageQuality] = value
-    } break
+      case 'imagequality': {
+        const value = camAPI.ImageQuality.ID[valueOrLabel]
+        if (!value) { throw new CameraAPIError(400, null, `Unknown Image Quality value: ${valueOrLabel}`) }
+        newProperties[camAPI.CameraProperty.ID.ImageQuality] = value
+      } break
 
-    case 'exposure':
-    case 'exposurecompensation': {
-      const value = camAPI.ExposureCompensation.forLabel(valueOrLabel).value
-      if (!value) { throw new CameraAPIError(400, null, `Unknown Exposure Compensation value: ${valueOrLabel}`) }
-      newProperties[camAPI.CameraProperty.ID.ExposureCompensation] = value
-    } break
+      case 'exposure':
+      case 'exposurecompensation': {
+        const value = camAPI.ExposureCompensation.forLabel(valueOrLabel).value
+        if (!value) { throw new CameraAPIError(400, null, `Unknown Exposure Compensation value: ${valueOrLabel}`) }
+        newProperties[camAPI.CameraProperty.ID.ExposureCompensation] = value
+      } break
 
-    // NOTE: Use the computeTZValue() function to help
-    case 'timezone':
-      newProperties[camAPI.CameraProperty.ID.TimeZone] = new camAPI.TimeZone(valueOrLabel)
-      break
+      // NOTE: Use the computeTZValue() function to help
+      case 'timezone':
+        newProperties[camAPI.CameraProperty.ID.TimeZone] = new camAPI.TimeZone(valueOrLabel)
+        break
 
-    // Assume anything else is an 'Option'
-    default: {
-      let value = valueOrLabel
-      if (typeof value === 'string') {
-        value = camAPI.Option[identifier]?.[valueOrLabel]
-        if (!value) { throw new CameraAPIError(400, null, `Unknown property (${identifier}) or value: ${valueOrLabel}`) }
-      }
-      newProperties[camAPI.CameraProperty.ID[identifier]] = value
-    } break
-  }
+      // Assume anything else is an 'Option'
+      default: {
+        let value = valueOrLabel
+        if (typeof value === 'string') {
+          value = camAPI.Option[identifier]?.[valueOrLabel]
+          if (!value) { throw new CameraAPIError(400, null, `Unknown property (${identifier}) or value: ${valueOrLabel}`) }
+        }
+        newProperties[camAPI.CameraProperty.ID[identifier]] = value
+      } break
+    }
+  })
 
-  // Attempt to set property
+  // Attempt to set properties
   try {
     const camList = getCameraList(index)
     const results = await Promise.allSettled(camList.map(cam => {
