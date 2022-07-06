@@ -275,20 +275,26 @@ export async function setCameraProperties (index, settingsObj) {
       case 'isospeed':
       case 'isosensitivity': {
         const value = camAPI.ISOSensitivity.forLabel(valueOrLabel)?.value
-        if (!value) { throw new CameraAPIError(400, null, `Unknown ISO value: ${valueOrLabel}`) }
+        if (typeof value !== 'number') {
+          throw new CameraAPIError(400, null, `Unknown ISO value: ${valueOrLabel}`)
+        }
         newProperties[camAPI.CameraProperty.ID.ISOSensitivity] = value
       } break
 
       case 'imagequality': {
         const value = camAPI.ImageQuality.ID[valueOrLabel]
-        if (!value) { throw new CameraAPIError(400, null, `Unknown Image Quality value: ${valueOrLabel}`) }
+        if (typeof value !== 'number') {
+          throw new CameraAPIError(400, null, `Unknown Image Quality value: ${valueOrLabel}`)
+        }
         newProperties[camAPI.CameraProperty.ID.ImageQuality] = value
       } break
 
       case 'exposure':
       case 'exposurecompensation': {
-        const value = camAPI.ExposureCompensation.forLabel(valueOrLabel).value
-        if (!value) { throw new CameraAPIError(400, null, `Unknown Exposure Compensation value: ${valueOrLabel}`) }
+        const value = camAPI.ExposureCompensation.forLabel(valueOrLabel)?.value
+        if (typeof value !== 'number') {
+          throw new CameraAPIError(400, null, `Unknown Exposure Compensation value: ${valueOrLabel}`)
+        }
         newProperties[camAPI.CameraProperty.ID.ExposureCompensation] = value
       } break
 
@@ -302,7 +308,9 @@ export async function setCameraProperties (index, settingsObj) {
         let value = valueOrLabel
         if (typeof value === 'string') {
           value = camAPI.Option[identifier]?.[valueOrLabel]
-          if (!value) { throw new CameraAPIError(400, null, `Unknown property (${identifier}) or value: ${valueOrLabel}`) }
+          if (typeof value !== 'number') {
+            throw new CameraAPIError(400, null, `Unknown property (${identifier}) or value: ${valueOrLabel}`)
+          }
         }
         newProperties[camAPI.CameraProperty.ID[identifier]] = value
       } break
