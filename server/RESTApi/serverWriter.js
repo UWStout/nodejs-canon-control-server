@@ -1,6 +1,6 @@
 // Basic HTTP routing library
 import Express from 'express'
-import { createNewSessionStorage } from '../camSDK/SDKEventHelper.js'
+import { createCaptureInSession, createNewSessionStorage } from '../camSDK/SDKEventHelper.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
@@ -22,6 +22,15 @@ router.post('/session/create/:mstime/:nickname?', (req, res) => {
   try {
     const result = createNewSessionStorage(req.params.mstime, req.params.nickname)
     result.status = "OK"
+    return res.send(result)
+  } catch (err) {
+    return res.send({ error: true })
+  }
+})
+
+router.post('/capture/create/directory', (req, res) => {
+  try {
+    const result = createCaptureInSession(req.body.session_path, req.body.capture_number, req.body.folder_name || undefined)
     return res.send(result)
   } catch (err) {
     return res.send({ error: true })

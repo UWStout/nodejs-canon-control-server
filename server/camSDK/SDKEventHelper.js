@@ -55,7 +55,8 @@ function createSessionData(time, nickname = undefined) {
     fullname: fullname,
     path: path,
     time: time,
-    date: date
+    date: date,
+    captures: 0
   }
 }
 
@@ -110,4 +111,39 @@ export function createNewSessionStorage (time, nickname = undefined) {
     }
   }
   return result
+}
+
+export function createCaptureInSession(sessionPath, captureNumber, folderName = "Capture_") {
+  // Ensure session directory exists
+  if (!fs.existsSync(sessionPath)) {
+    return {
+      error: true,
+      result: 'Unable to find session diretory'
+    }
+  }
+
+  const capturePath = `${sessionPath}/${folderName}${captureNumber}`
+  // Ensure capture directory does not already exist
+  if (fs.existsSync(capturePath)) {
+    return {
+      error: true,
+      result: `Capture: ${folderName}${captureNumber} already exists`
+    }
+  }
+
+  // Create capture directory and return the path
+  try {
+    mkdirSync(capturePath)
+  }
+  catch (err) {
+    return {
+      error: true,
+      result: 'Unable to create capture directory'
+    }
+  }
+
+  return {
+    result: "Capture directory created",
+    path: capturePath
+  }
 }
