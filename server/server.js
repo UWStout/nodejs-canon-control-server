@@ -11,6 +11,8 @@ import Cors from 'cors'
 // Standard HTTP routes
 import camReadRouter from './RESTApi/cameraReader.js'
 import camWriteRouter from './RESTApi/cameraWriter.js'
+import serverReadRouter from './RESTApi/serverReader.js'
+import serverWriteRouter from './RESTApi/serverWriter.js'
 
 import { makeSocket, serverReady } from './sockets.js'
 
@@ -61,6 +63,10 @@ app.use(Express.json())
 // Attach our data router 'routes' under '/camera'
 app.use('/camera', camReadRouter)
 app.use('/camera', camWriteRouter)
+
+// Attach server data 'routes' under '/server'
+app.use('/server', serverReadRouter)
+app.use('/server', serverWriteRouter)
 
 // Statically serve files from 'public'
 app.use(Express.static('public'))
