@@ -6,3 +6,4 @@ public/images/*.jpg
 public/images/*.cr?
 public/images/*.JPG
 public/images/*.CR?
+public/images/sessions.json
