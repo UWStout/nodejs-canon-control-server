@@ -1,6 +1,6 @@
 // Basic HTTP routing library
 import Express from 'express'
-import { createCaptureInSession, createNewSessionStorage } from '../camSDK/SDKEventHelper.js'
+import { createCaptureInSession, createNewSessionStorage } from '../util/fileHelper.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
