@@ -1,6 +1,8 @@
 // Basic HTTP routing library
 import Express from 'express'
-import { createCaptureInSession, createNewSessionStorage } from '../util/fileHelper.js'
+
+import { setCapturePath } from './cameraMonitor.js'
+import { createFolder, addSessionToList, createSessionData } from '../util/fileHelper.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
@@ -18,20 +20,58 @@ log.info("Server Writer Running")
 
 // ******* Writing routes **************
 
-router.post('/session/create/:mstime/:nickname?', (req, res) => {
+router.post('/session/create/auto/:mstime/:nickname?', (req, res) => {
   try {
-    const result = createNewSessionStorage(req.params.mstime, req.params.nickname)
-    result.status = "OK"
+    const sessionData = createSessionData(req.params.mstime, req.params.nickname || undefined)
+    const result1 = createFolder(sessionData.fullname)
+    if (result1.error) {
+      return res.send(result1)
+    }
+
+    const result2 = addSessionToList(sessionData)
+    const result = {
+      ...(result1.success && result2.success) && {success: true},
+      ...(result1.error || result2.error) && {error: true},
+      ...(result1.path != undefined) && {path: result1.path},
+      result: result1.result + ' & ' + result2.result,
+      sessionData: sessionData
+    }
+
     return res.send(result)
   } catch (err) {
     return res.send({ error: true })
   }
 })
 
-router.post('/capture/create/directory', (req, res) => {
+router.post('/session/create/manual', (req, res) => {
+  const sessionData = req.body.sessionData || {
+    nickname: req.body.nickname,
+    fullname: req.body.path.substring(req.body.path.lastIndexOf('/') + 1),
+    path: req.body.path,
+    time: req.body.time,
+    date: new Date(parseInt(req.body.time)).toDateString()
+  }
+
+  res.send(sessionData)
+})
+
+router.post('/capture/create', (req, res) => {
   try {
-    const result = createCaptureInSession(req.body.session_path, req.body.capture_number, req.body.folder_name || undefined)
+    const folderName = req.body.folderName || 'Capture_'
+    const result = createFolder(`${folderName}${req.body.captureNumber}`, req.body.sessionPath)
     return res.send(result)
+  } catch (err) {
+    return res.send({ error: true })
+  }
+})
+
+router.post('/capture/select', (req, res) => {
+  try {
+    setCapturePath(req.body.capturePath)
+    return res.send({
+      success: true,
+      path: req.body.capturePath
+    })
   } catch (err) {
     return res.send({ error: true })
   }

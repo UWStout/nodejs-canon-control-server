@@ -11,6 +11,7 @@ import { getCameraSummaryList, portList, SNList } from '../camSDK/SDKCameraHelpe
 import dotenv from 'dotenv'
 import { makeLogger } from '../util/logging.js'
 import { info } from 'console'
+import { getCameraNicknameList } from '../util/fileHelper.js'
 const log = makeLogger('server', 'monitor')
 
 // Update environment variables
@@ -20,12 +21,10 @@ const HOST_NAME = process.env.HOST_NAME || 'localhost'
 const DEV_PORT = process.env.DEV_PORT || 3000
 const PROD_PORT = process.env.PROD_PORT || 42424
 
-// Read list of camera nicknames into array
-const rawData = fs.readFileSync(
-  './server/RESTApi/CameraNicknames.json',
-  { encoding: 'utf8' }
-)
-const camNicknames = JSON.parse(rawData)
+const camNicknames = getCameraNicknameList()
+
+// Current capture path for image downloads
+let capturePath = './public/images'
 
 // Store local copy of server socket
 let lastServerSocket = null
@@ -79,7 +78,7 @@ export function setSocketServer (serverSocket) {
 
             const imgData = file?.downloadThumbnailToString()
             const imgBuffer = Buffer.from(imgData, 'base64')
-            fs.writeFileSync(`./public/images/SUB_${HOST_NICKNAME}_${camName}_${file?.name}`, imgBuffer, { encoding: 'utf8' })
+            fs.writeFileSync(`${capturePath}/SUB_${HOST_NICKNAME}_${camName}_${file?.name}`, imgBuffer, { encoding: 'utf8' })
           }
           break
 
@@ -114,4 +113,13 @@ export function setupSocketClient (clientSocket) {
 
 // 'this' is the socket inside the listener functions
 function subscribeListener (message) {
+}
+
+// Set the directory to download incoming images to
+export function setCapturePath (path) {
+  capturePath = path
+}
+
+export function getCapturePath () {
+  return capturePath 
 }

@@ -2,7 +2,7 @@ import fs from 'fs'
 
 const SESSIONS_DIR = './public/images'
 
-// converts and integer(num) into a string that is (digits) long by adding leading zeros
+// converts an integer(num) into a string that is (digits) long by adding leading zeros
 function numStrLeadZeros(num, digits) {
   let numStr = ""
   for ( let i = num.toString().length ; i < digits ; ++i ){
@@ -12,7 +12,7 @@ function numStrLeadZeros(num, digits) {
 }
 
 // Creates a unique fullname & path for provided nickname & time
-function createSessionData(time, nickname = undefined) {
+export function createSessionData(time, nickname = undefined) {
   if (!nickname) {
     nickname = time
   }
@@ -25,98 +25,96 @@ function createSessionData(time, nickname = undefined) {
     fullname: fullname,
     path: path,
     time: time,
-    date: date,
-    captures: 0
+    date: date.toDateString()
   }
 }
 
 // Adds sessionData to the sessions.json file
-function addSessionToList(sessionData) {
-  const listPath = `${SESSIONS_DIR}/sessions.json`
-  let rawData
-  try { rawData = fs.readFileSync( listPath, { encoding: 'utf8' } ) }
-  catch (err) { return { error: true } }
-
-  const parsedData = JSON.parse(rawData)
-  parsedData.push(sessionData)
-  const dataStr = JSON.stringify(parsedData, null, 2)
-
-  try { fs.writeFileSync(listPath, dataStr, { encoding:'utf8' }) }
-  catch (err) { return { error: true } }
-  return { error: false }
-}
-
-// creates a new session // TODO break this up and clean. multiple function calls in the route is OK, no need to smash them together here
-export function createNewSessionStorage (time, nickname = undefined) {
-
-  const sessionData = createSessionData(time, nickname)
-
-  const result = {
-    error: true,
-    result: "incomplete",
-    sessionData: sessionData
+export function addSessionToList(sessionData) {
+  const listResult = getSessions()
+  if (listResult.error) {
+    return listResult
   }
 
-  if (fs.existsSync(sessionData.path)) {
-    result.error = true
-    result.result = "Path / Session already exists"
-  }
-  else {
-    try {
-      fs.mkdirSync(sessionData.path)
-      result.error = false
-      result.result = "Session created successfuly"
-    } catch (err) {
-      result.error = true
-      result.result = "Failed to Create Session"
-    }
-  }
+  listResult.sessions.push(sessionData)
+  const dataStr = JSON.stringify(listResult.sessions, null, 2)
 
-  if (result.error === false) {
-    result.error = addSessionToList(sessionData).error
-    if (result.error) {
-      result.result += " & Failed to update session list"
-    }
-    else
-    {
-      result.result += " & Session list updated"
-    }
-  }
-  return result
-}
-
-// Creates a new directory for a single multi-camera capture within provided session path
-export function createCaptureInSession(sessionPath, captureNumber, folderName = "Capture_") {
-  // Ensure session directory exists
-  if (!fs.existsSync(sessionPath)) {
-    return {
-      error: true,
-      result: 'Unable to find session diretory'
-    }
-  }
-
-  const capturePath = `${sessionPath}/${folderName}${captureNumber}`
-  // Ensure capture directory does not already exist
-  if (fs.existsSync(capturePath)) {
-    return {
-      error: true,
-      result: `Capture: ${folderName}${captureNumber} already exists`
-    }
-  }
-
-  // Create capture directory and return the path
   try {
-    fs.mkdirSync(capturePath)
-  }
-  catch (err) {
+    fs.writeFileSync(`${SESSIONS_DIR}/sessions.json`, dataStr, { encoding:'utf8' })
+  } catch (err) {
     return {
       error: true,
-      result: 'Unable to create capture directory'
+      result: 'Unable to add session data to session list'
     }
   }
 
   return {
-    result: "Capture directory created",
-    path: capturePath
+    success: true,
+    result: 'Session added to session list'
   }
+}
+
+// Returns list of all sessions in sessions.json
+export function getSessions() {
+  try {
+    const rawData = fs.readFileSync(
+      `${SESSIONS_DIR}/sessions.json`,
+      { encoding: 'utf8' }
+    )
+    return {
+      success: true,
+      sessions: JSON.parse(rawData)
+    }
+  } catch (err) {
+    return {
+      error: true,
+      result: 'Unable to get session list'
+    }
+  }
+}
+
+export function createFolder(folderName, parentDir = SESSIONS_DIR) {
+  // Ensure parent directory exists
+  if (!fs.existsSync(parentDir)) {
+    return {
+      error: true,
+      result: 'Unable to find parent diretory'
+    }
+  }
+
+  const newDir = `${parentDir}/${folderName}`
+  // Ensure new directory does not already exist
+  if (fs.existsSync(newDir)) {
+    return {
+      error: true,
+      result: `${newDir} already exists`
+    }
+  }
+
+  // Try to create new directory
+  try {
+    fs.mkdirSync(newDir)
+  }
+  catch (err) {
+    return {
+      error: true,
+      result: 'Unable to create new directory'
+    }
+  }
+
+  // Return success and full path to new directory
+  return {
+    success: true,
+    result: 'New directory created',
+    path: newDir
+  }
+}
+
+export function getCameraNicknameList() {
+  // Read list of camera nicknames into array
+  const rawData = fs.readFileSync(
+    './server/RESTApi/CameraNicknames.json',
+    { encoding: 'utf8' }
+  )
+  return JSON.parse(rawData)
 }
