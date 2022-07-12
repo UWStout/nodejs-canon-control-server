@@ -96,7 +96,7 @@ export function createFolder(folderName, parentDir = '') {
 
   // Try to create new directory
   try {
-    fs.mkdirSync(path.join(DOWNLOAD_DIR, newDir))
+    fs.mkdirSync(path.join(DOWNLOAD_DIR, newDir), {recursive: true})
   }
   catch (err) {
     return {

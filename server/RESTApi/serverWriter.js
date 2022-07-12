@@ -52,7 +52,26 @@ router.post('/session/create/manual', (req, res) => {
     date: new Date(parseInt(req.body.time)).toDateString()
   }
 
-  res.send(sessionData)
+  try {
+    const result1 = createFolder(sessionData.path)
+    if (result1.error) {
+      return res.send(result1)
+    }
+
+    const result2 = addSessionToList(sessionData)
+    const result = {
+      ...(result1.success && result2.success) && {success: true},
+      ...(result1.error || result2.error) && {error: true},
+      ...(result1.path != undefined) && {path: result1.path},
+      result: result1.result + ' & ' + result2.result,
+      sessionData: sessionData
+    }
+
+    return res.send(result)
+  } catch (err) {
+    return res.send({ error: true })
+  }
+
 })
 
 router.post('/capture/create', (req, res) => {
