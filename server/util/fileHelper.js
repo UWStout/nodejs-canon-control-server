@@ -1,6 +1,10 @@
 import fs from 'fs'
+import path from 'path'
 
-const SESSIONS_DIR = './public/images'
+// Update environment variables
+import dotenv from 'dotenv'
+dotenv.config()
+const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR || './public/images'
 
 // converts an integer(num) into a string that is (digits) long by adding leading zeros
 function numStrLeadZeros(num, digits) {
@@ -19,7 +23,7 @@ export function createSessionData(time, nickname = undefined) {
   const date = new Date(parseInt(time))
 
   const fullname = `SES_${nickname}_AT_${numStrLeadZeros(date.getHours(), 2)}_${numStrLeadZeros(date.getMinutes(), 2)}_${date.toDateString()}`.replaceAll(" ", "_")
-  const path = `${SESSIONS_DIR}/${fullname}`
+  const path = `${fullname}`
   return {
     nickname: nickname,
     fullname: fullname,
@@ -40,7 +44,7 @@ export function addSessionToList(sessionData) {
   const dataStr = JSON.stringify(listResult.sessions, null, 2)
 
   try {
-    fs.writeFileSync(`${SESSIONS_DIR}/sessions.json`, dataStr, { encoding:'utf8' })
+    fs.writeFileSync(path.join(DOWNLOAD_DIR, 'sessions.json'), dataStr, { encoding:'utf8' })
   } catch (err) {
     return {
       error: true,
@@ -58,7 +62,7 @@ export function addSessionToList(sessionData) {
 export function getSessions() {
   try {
     const rawData = fs.readFileSync(
-      `${SESSIONS_DIR}/sessions.json`,
+      path.join(DOWNLOAD_DIR, 'sessions.json'),
       { encoding: 'utf8' }
     )
     return {
@@ -73,18 +77,17 @@ export function getSessions() {
   }
 }
 
-export function createFolder(folderName, parentDir = SESSIONS_DIR) {
+export function createFolder(folderName, parentDir = '') {
   // Ensure parent directory exists
-  if (!fs.existsSync(parentDir)) {
+  if (!fs.existsSync(path.join(DOWNLOAD_DIR, parentDir))) {
     return {
       error: true,
       result: 'Unable to find parent diretory'
     }
   }
-
-  const newDir = `${parentDir}/${folderName}`
+  const newDir = path.join(parentDir, folderName)
   // Ensure new directory does not already exist
-  if (fs.existsSync(newDir)) {
+  if (fs.existsSync(path.join(DOWNLOAD_DIR, newDir))) {
     return {
       error: true,
       result: `${newDir} already exists`
@@ -93,7 +96,7 @@ export function createFolder(folderName, parentDir = SESSIONS_DIR) {
 
   // Try to create new directory
   try {
-    fs.mkdirSync(newDir)
+    fs.mkdirSync(path.join(DOWNLOAD_DIR, newDir))
   }
   catch (err) {
     return {

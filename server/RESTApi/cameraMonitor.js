@@ -1,4 +1,5 @@
 import fs from 'fs'
+import path from 'path'
 
 // The camera control API
 import camAPI from '@dimensional/napi-canon-cameras'
@@ -20,11 +21,12 @@ const HOST_NICKNAME = process.env.HOST_NICKNAME || 'nickname'
 const HOST_NAME = process.env.HOST_NAME || 'localhost'
 const DEV_PORT = process.env.DEV_PORT || 3000
 const PROD_PORT = process.env.PROD_PORT || 42424
+const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR || './public/images'
 
 const camNicknames = getCameraNicknameList()
 
 // Current capture path for image downloads
-let capturePath = './public/images'
+let capturePath = ''
 
 // Store local copy of server socket
 let lastServerSocket = null
@@ -78,7 +80,9 @@ export function setSocketServer (serverSocket) {
 
             const imgData = file?.downloadThumbnailToString()
             const imgBuffer = Buffer.from(imgData, 'base64')
-            fs.writeFileSync(`${capturePath}/SUB_${HOST_NICKNAME}_${camName}_${file?.name}`, imgBuffer, { encoding: 'utf8' })
+            const imgName = `SUB_${HOST_NICKNAME}_${camName}_${file?.name}`
+           
+            fs.writeFileSync(path.join(DOWNLOAD_DIR, capturePath, imgName), imgBuffer, { encoding: 'utf8' })
           }
           break
 
