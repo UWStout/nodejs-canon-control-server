@@ -25,12 +25,15 @@ export function makeSocket (serverListener) {
   log.info('Setting up sockets')
 
   // Setup web-sockets with session middleware
-  mySocket = new io.Server(serverListener)
+  mySocket = new io.Server(serverListener, {
+    path: '/socket.io',
+    cors: { origin: true }
+  })
   setSocketServer(mySocket)
 
   // Respond to new socket connections
   mySocket.on('connection', (socket) => {
-    log.verbose(`[WS:${socket.id}] New ${socket.request.session.type} connection`)
+    log.info(`[WS:${socket.id}] New connection`)
 
     // Configure our custom message responses
     setupSocketClient(socket)
@@ -64,11 +67,11 @@ export function serverReady () {
 // Respond to socket.disconnect events
 // - 'this' = current socket
 function socketDisconnect (reason) {
-  log.verbose(`[WS:${this.id}] ${this.request.session.type} disconnected because - ${reason}`)
+  log.info(`[WS:${this.id}] disconnected because - ${reason}`)
 }
 
 // Log the ping from a client
 // - 'this' = current socket
 function socketPing () {
-  log.verbose(`[WS:${this.id}] websocket ping`)
+  log.info(`[WS:${this.id}] websocket ping`)
 }
