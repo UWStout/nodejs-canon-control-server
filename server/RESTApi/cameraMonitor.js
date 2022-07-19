@@ -70,6 +70,8 @@ export function setSocketServer (serverSocket) {
           if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
             const serial = SNList[camIndex]
             const nickname = camNicknames.find(pair => pair.SN === serial).nickname
+
+            // TODO: Test logic in '!nickname'
             let camName
             if (!nickname) {
               camName = `CAM_${nickname}`
