@@ -7,23 +7,25 @@ import camAPI from '@dimensional/napi-canon-cameras'
 // API Helper interface
 import { setupEventMonitoring } from '../camSDK/SDKEventHelper.js'
 import { getCameraSummaryList, portList, SNList } from '../camSDK/SDKCameraHelper.js'
-
-// Setup logging
-import dotenv from 'dotenv'
-import { makeLogger } from '../util/logging.js'
-import { info } from 'console'
 import { getCameraNicknameList } from '../util/fileHelper.js'
-const log = makeLogger('server', 'monitor')
+
+// Setup logging and environment variables
+import { makeLogger } from '../util/logging.js'
+
+import dotenv from 'dotenv'
 
 // Update environment variables
 dotenv.config()
 const HOST_NICKNAME = process.env.HOST_NICKNAME || 'nickname'
-const HOST_NAME = process.env.HOST_NAME || 'localhost'
-const DEV_PORT = process.env.DEV_PORT || 3000
-const PROD_PORT = process.env.PROD_PORT || 42424
+// const HOST_NAME = process.env.HOST_NAME || 'localhost'
+// const DEV_PORT = process.env.DEV_PORT || 3000
+// const PROD_PORT = process.env.PROD_PORT || 42424
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR || './public/images'
 
 const camNicknames = getCameraNicknameList()
+
+// Create logger
+const log = makeLogger('server', 'monitor')
 
 // Current capture path for image downloads
 let capturePath = ''
@@ -67,21 +69,18 @@ export function setSocketServer (serverSocket) {
           log.info(`Download request: camera ${camIndex}, ${file?.name}`)
           if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
             const serial = SNList[camIndex]
-            const nickname = camNicknames.find( pair => pair.SN == serial ).nickname
+            const nickname = camNicknames.find(pair => pair.SN === serial).nickname
             let camName
-            if (!nickname)
-            {
+            if (!nickname) {
               camName = `CAM_${nickname}`
-            }
-            else
-            {
+            } else {
               camName = `SN_${serial}`
             }
 
             const imgData = file?.downloadThumbnailToString()
             const imgBuffer = Buffer.from(imgData, 'base64')
             const imgName = `SUB_${HOST_NICKNAME}_${camName}_${file?.name}`
-           
+
             fs.writeFileSync(path.join(DOWNLOAD_DIR, capturePath, imgName), imgBuffer, { encoding: 'utf8' })
           }
           break
@@ -125,5 +124,5 @@ export function setCapturePath (path) {
 }
 
 export function getCapturePath () {
-  return capturePath 
+  return capturePath
 }

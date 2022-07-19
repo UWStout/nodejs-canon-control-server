@@ -10,7 +10,7 @@ const log = makeLogger('server', 'main-read')
 
 // Create a router to attach to an express server app
 const router = new Express.Router()
-log.info("Server Reader Running")
+log.info('Server Reader Routes Active')
 
 // ******* Reading routes **************
 
@@ -18,9 +18,8 @@ router.get('/capture/current', (req, res) => {
   try {
     const capturePath = getCapturePath()
     return res.send({
-      status: 'OK',
-      result: 'Success',
-      capturePath: capturePath
+      success: true,
+      capturePath
     })
   } catch (err) {
     return res.send({ error: true })

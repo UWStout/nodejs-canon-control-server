@@ -13,13 +13,9 @@ const router = new Express.Router()
 
 // Install JSON body parser for all these routes
 router.use(Express.json())
-// router.use(Express.urlencoded( { extended: false , type: '*/*' } )) // For multiple query params
-
-log.info("Server Writer Running")
-
+log.info('Server Writer Routes Active')
 
 // ******* Writing routes **************
-
 router.post('/session/create/auto/:mstime/:nickname?', (req, res) => {
   try {
     const sessionData = createSessionData(req.params.mstime, req.params.nickname || undefined)
@@ -30,11 +26,11 @@ router.post('/session/create/auto/:mstime/:nickname?', (req, res) => {
 
     const result2 = addSessionToList(sessionData)
     const result = {
-      ...(result1.success && result2.success) && {success: true},
-      ...(result1.error || result2.error) && {error: true},
-      ...(result1.path != undefined) && {path: result1.path},
+      ...(result1.success && result2.success) && { success: true },
+      ...(result1.error || result2.error) && { error: true },
+      ...(result1.path !== undefined) && { path: result1.path },
       result: result1.result + ' & ' + result2.result,
-      sessionData: sessionData
+      sessionData
     }
 
     return res.send(result)
@@ -60,18 +56,17 @@ router.post('/session/create/manual', (req, res) => {
 
     const result2 = addSessionToList(sessionData)
     const result = {
-      ...(result1.success && result2.success) && {success: true},
-      ...(result1.error || result2.error) && {error: true},
-      ...(result1.path != undefined) && {path: result1.path},
+      ...(result1.success && result2.success) && { success: true },
+      ...(result1.error || result2.error) && { error: true },
+      ...(result1.path !== undefined) && { path: result1.path },
       result: result1.result + ' & ' + result2.result,
-      sessionData: sessionData
+      sessionData
     }
 
     return res.send(result)
   } catch (err) {
     return res.send({ error: true })
   }
-
 })
 
 router.post('/capture/create', (req, res) => {

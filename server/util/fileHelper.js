@@ -7,34 +7,34 @@ dotenv.config()
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR || './public/images'
 
 // converts an integer(num) into a string that is (digits) long by adding leading zeros
-function numStrLeadZeros(num, digits) {
-  let numStr = ""
-  for ( let i = num.toString().length ; i < digits ; ++i ){
-    numStr += "0"
+function numStrLeadZeros (num, digits) {
+  let numStr = ''
+  for (let i = num.toString().length; i < digits; ++i) {
+    numStr += '0'
   }
   return numStr + num
 }
 
 // Creates a unique fullname & path for provided nickname & time
-export function createSessionData(time, nickname = undefined) {
+export function createSessionData (time, nickname = undefined) {
   if (!nickname) {
     nickname = time
   }
   const date = new Date(parseInt(time))
 
-  const fullname = `SES_${nickname}_AT_${numStrLeadZeros(date.getHours(), 2)}_${numStrLeadZeros(date.getMinutes(), 2)}_${date.toDateString()}`.replaceAll(" ", "_")
+  const fullname = `SES_${nickname}_AT_${numStrLeadZeros(date.getHours(), 2)}_${numStrLeadZeros(date.getMinutes(), 2)}_${date.toDateString()}`.replaceAll(' ', '_')
   const path = `${fullname}`
   return {
-    nickname: nickname,
-    fullname: fullname,
-    path: path,
-    time: time,
+    nickname,
+    fullname,
+    path,
+    time,
     date: date.toDateString()
   }
 }
 
 // Adds sessionData to the sessions.json file
-export function addSessionToList(sessionData) {
+export function addSessionToList (sessionData) {
   const listResult = getSessions()
   if (listResult.error) {
     return listResult
@@ -44,7 +44,7 @@ export function addSessionToList(sessionData) {
   const dataStr = JSON.stringify(listResult.sessions, null, 2)
 
   try {
-    fs.writeFileSync(path.join(DOWNLOAD_DIR, 'sessions.json'), dataStr, { encoding:'utf8' })
+    fs.writeFileSync(path.join(DOWNLOAD_DIR, 'sessions.json'), dataStr, { encoding: 'utf8' })
   } catch (err) {
     return {
       error: true,
@@ -59,7 +59,7 @@ export function addSessionToList(sessionData) {
 }
 
 // Returns list of all sessions in sessions.json
-export function getSessions() {
+export function getSessions () {
   try {
     const rawData = fs.readFileSync(
       path.join(DOWNLOAD_DIR, 'sessions.json'),
@@ -77,12 +77,12 @@ export function getSessions() {
   }
 }
 
-export function createFolder(folderName, parentDir = '') {
+export function createFolder (folderName, parentDir = '') {
   // Ensure parent directory exists
   if (!fs.existsSync(path.join(DOWNLOAD_DIR, parentDir))) {
     return {
       error: true,
-      result: 'Unable to find parent diretory'
+      result: 'Unable to find parent directory'
     }
   }
   const newDir = path.join(parentDir, folderName)
@@ -96,9 +96,8 @@ export function createFolder(folderName, parentDir = '') {
 
   // Try to create new directory
   try {
-    fs.mkdirSync(path.join(DOWNLOAD_DIR, newDir), {recursive: true})
-  }
-  catch (err) {
+    fs.mkdirSync(path.join(DOWNLOAD_DIR, newDir), { recursive: true })
+  } catch (err) {
     return {
       error: true,
       result: 'Unable to create new directory'
@@ -113,7 +112,7 @@ export function createFolder(folderName, parentDir = '') {
   }
 }
 
-export function getCameraNicknameList() {
+export function getCameraNicknameList () {
   // Read list of camera nicknames into array
   const rawData = fs.readFileSync(
     './server/RESTApi/CameraNicknames.json',

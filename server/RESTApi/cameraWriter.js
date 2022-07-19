@@ -19,6 +19,7 @@ const router = new Express.Router()
 
 // Install JSON body parser for all these routes
 router.use(Express.json())
+log.info('Camera Writer Routes Active')
 
 function validateIndex (req, message = 'Writing') {
   const index = parseInt(req.params.index)
