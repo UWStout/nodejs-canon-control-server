@@ -73,5 +73,5 @@ function socketDisconnect (reason) {
 // Log the ping from a client
 // - 'this' = current socket
 function socketPing () {
-  log.info(`[WS:${this.id}] websocket ping`)
+  log.verbose(`[WS:${this.id}] websocket ping`)
 }
