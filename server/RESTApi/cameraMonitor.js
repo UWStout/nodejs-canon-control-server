@@ -75,7 +75,6 @@ export function setSocketServer (serverSocket) {
             const imgBuffer = Buffer.from(imgData, 'base64')
             const imgName = `SUB_${HOST_NICKNAME}_${camName}_${file?.name}`
             fs.writeFileSync(path.join(DOWNLOAD_DIR, capturePath, imgName), imgBuffer, { encoding: 'utf8' })
-            file.downloadToPath(path.join(DOWNLOAD_DIR, capturePath, imgName))
           }
           break
 
