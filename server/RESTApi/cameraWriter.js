@@ -4,7 +4,8 @@ import Express from 'express'
 import {
   setCameraProperty,
   takePicture,
-  pressShutterButton
+  pressShutterButton,
+  setCameraProperties
   // computeTZValue
 } from '../camSDK/SDKCameraHelper.js'
 
@@ -28,61 +29,61 @@ function validateIndex (req, message = 'Writing') {
   } else if (!isNaN(index)) {
     log.info(`${message} for camera ${index}`)
   } else {
-    throw new CameraAPIError(400, 'Invalid index type. Must be an integer or *')
+    throw new CameraAPIError(400, null, 'Invalid index type. Must be an integer or *')
   }
 
   return index
 }
 
 // ******* API Camera Writing routes **************
-router.post('/:index/trigger', (req, res) => {
+router.post('/:index/trigger', async (req, res) => {
   try {
     const index = validateIndex(req, 'Taking picture')
-    takePicture(isNaN(index) ? '*' : index)
-    return res.send({ status: 'OK' })
+    const results = await takePicture(isNaN(index) ? '*' : index)
+    return res.send({ status: 'OK', results })
   } catch (err) {
     return CameraAPIError.respond(err, res, log, { index: req.params.index })
   }
 })
 
-router.post('/:index/halfShutter', (req, res) => {
+router.post('/:index/halfShutter', async (req, res) => {
   try {
     const index = validateIndex(req, 'Halfway shutter press')
-    pressShutterButton(isNaN(index) ? '*' : index, true)
-    return res.send({ status: 'OK' })
+    const results = await pressShutterButton(isNaN(index) ? '*' : index, true)
+    return res.send({ status: 'OK', results })
   } catch (err) {
     return CameraAPIError.respond(err, res, log, { index: req.params.index })
   }
 })
 
-router.post('/:index/fullShutter', (req, res) => {
+router.post('/:index/fullShutter', async (req, res) => {
   try {
     const index = validateIndex(req, 'Full shutter press')
-    pressShutterButton(isNaN(index) ? '*' : index)
-    return res.send({ status: 'OK' })
+    const results = await pressShutterButton(isNaN(index) ? '*' : index)
+    return res.send({ status: 'OK', results })
   } catch (err) {
     return CameraAPIError.respond(err, res, log, { index: req.params.index })
   }
 })
 
-router.post('/:index/syncTime', (req, res) => {
+router.post('/:index/syncTime', async (req, res) => {
   const now = new Date()
   // const tzString = Intl.DateTimeFormat().resolvedOptions().timeZone
   try {
     const index = validateIndex(req, 'Synchronizing date and time')
-    setCameraProperty(isNaN(index) ? '*' : index, 'UTCTime', now)
+    const results = await setCameraProperty(isNaN(index) ? '*' : index, 'UTCTime', now)
     // setCameraProperty(isNaN(index) ? '*' : index, 'TimeZone', computeTZValue(tzString))
-    return res.send({ status: 'OK' })
+    return res.send({ status: 'OK', results })
   } catch (err) {
     return CameraAPIError.respond(err, res, log, { index: req.params.index, value: now.getTime() })
   }
 })
 
-router.post('/:index/:propID', (req, res) => {
+router.post('/:index/:propID', async (req, res) => {
   try {
     const index = validateIndex(req, `Setting ${req.params.propID}`)
-    setCameraProperty(isNaN(index) ? '*' : index, req.params.propID, req.body.value)
-    return res.send({ status: 'OK' })
+    const results = await setCameraProperty(isNaN(index) ? '*' : index, req.params.propID, req.body.value)
+    return res.send({ status: 'OK', results })
   } catch (err) {
     return CameraAPIError.respond(err, res, log, {
       index: req.params.index,
@@ -92,41 +93,11 @@ router.post('/:index/:propID', (req, res) => {
   }
 })
 
-router.post('/:index', (req, res) => {
+router.post('/:index', async (req, res) => {
   try {
-    if (!Array.isArray(req.body)) {
-      throw new Error('Bad request: Body must be array of properties to set')
-    }
-
     const index = validateIndex(req, 'Setting bulk properties')
-    const results = {}
-    let failCount = 0
-    for (let i = 0; i < req.body.length; i++) {
-      const property = req.body[i]
-      if (typeof property.propID === 'string' && typeof property.value === 'string') {
-        try {
-          setCameraProperty(isNaN(index) ? '*' : index, property.propID, property.value)
-          results[property.propID] = { status: 'ok' }
-        } catch (error) {
-          results[property.propID] = { status: 'error', error: error.message }
-          failCount++
-        }
-      } else {
-        if (!results.unknown) {
-          results.unknown = [property]
-        } else {
-          results.unknown.push(property)
-        }
-      }
-    }
-
-    if (failCount > 0) {
-      return res.status(failCount >= req.body.length ? 400 : 200).json(
-        { error: true, ...results }
-      )
-    }
-
-    return res.json(results)
+    const results = await setCameraProperties(isNaN(index) ? '*' : index, req.body)
+    return res.send({ status: 'OK', results })
   } catch (err) {
     return CameraAPIError.respond(err, res, log, { index: req.params.index, body: req.body })
   }
