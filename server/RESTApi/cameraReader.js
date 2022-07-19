@@ -16,6 +16,7 @@ const log = makeLogger('server', 'reader')
 
 // Create a router to attach to an express server app
 const router = new Express.Router()
+log.info('Camera Reader Routes Active')
 
 // ******* API Camera Reading routes **************
 router.get('/', (req, res) => {

@@ -1,15 +1,34 @@
 import fs from 'fs'
+import path from 'path'
 
 // The camera control API
 import camAPI from '@dimensional/napi-canon-cameras'
 
 // API Helper interface
 import { setupEventMonitoring } from '../camSDK/SDKEventHelper.js'
-import { getCameraSummaryList, portList } from '../camSDK/SDKCameraHelper.js'
+import { getCameraSummaryList, portList, SNList } from '../camSDK/SDKCameraHelper.js'
+import { getCameraNicknameList } from '../util/fileHelper.js'
 
-// Setup logging
+// Setup logging and environment variables
 import { makeLogger } from '../util/logging.js'
+
+import dotenv from 'dotenv'
+
+// Update environment variables
+dotenv.config()
+const HOST_NICKNAME = process.env.HOST_NICKNAME || 'nickname'
+// const HOST_NAME = process.env.HOST_NAME || 'localhost'
+// const DEV_PORT = process.env.DEV_PORT || 3000
+// const PROD_PORT = process.env.PROD_PORT || 42424
+const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR || './public/images'
+
+const camNicknames = getCameraNicknameList()
+
+// Create logger
 const log = makeLogger('server', 'monitor')
+
+// Current capture path for image downloads
+let capturePath = ''
 
 // Store local copy of server socket
 let lastServerSocket = null
@@ -49,8 +68,13 @@ export function setSocketServer (serverSocket) {
         case camAPI.CameraBrowser.EventName.DownloadRequest:
           log.info(`Download request: camera ${camIndex}, ${file?.name}`)
           if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
+            const serial = SNList[camIndex]
+            const nickname = camNicknames.find(pair => pair.SN === serial)?.nickname
+            const camName = (nickname) ? `CAM_${nickname}` : `SN_${serial}`
             const imgData = file?.downloadThumbnailToString()
-            fs.writeFileSync(`./public/images/${file?.name}`, imgData, { encoding: 'utf8' })
+            const imgBuffer = Buffer.from(imgData, 'base64')
+            const imgName = `SUB_${HOST_NICKNAME}_${camName}_${file?.name}`
+            fs.writeFileSync(path.join(DOWNLOAD_DIR, capturePath, imgName), imgBuffer, { encoding: 'utf8' })
           }
           break
 
@@ -85,4 +109,13 @@ export function setupSocketClient (clientSocket) {
 
 // 'this' is the socket inside the listener functions
 function subscribeListener (message) {
+}
+
+// Set the directory to download incoming images to
+export function setCapturePath (path) {
+  capturePath = path
+}
+
+export function getCapturePath () {
+  return capturePath
 }
