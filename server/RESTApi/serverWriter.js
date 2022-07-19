@@ -18,8 +18,8 @@ log.info('Server Writer Routes Active')
 // ******* Writing routes **************
 router.post('/session/create/auto/:mstime/:nickname?', (req, res) => {
   try {
-    const sessionData = createSessionData(req.params.mstime, req.params.nickname || undefined)
-    const result1 = createFolder(sessionData.fullname)
+    const sessionData = createSessionData(req.params.mstime, req.params.nickname || '')
+    const result1 = createFolder(sessionData.path)
     if (result1.error) {
       return res.send(result1)
     }
@@ -28,7 +28,6 @@ router.post('/session/create/auto/:mstime/:nickname?', (req, res) => {
     const result = {
       ...(result1.success && result2.success) && { success: true },
       ...(result1.error || result2.error) && { error: true },
-      ...(result1.path !== undefined) && { path: result1.path },
       result: result1.result + ' & ' + result2.result,
       sessionData
     }
@@ -42,10 +41,8 @@ router.post('/session/create/auto/:mstime/:nickname?', (req, res) => {
 router.post('/session/create/manual', (req, res) => {
   const sessionData = req.body.sessionData || {
     nickname: req.body.nickname,
-    fullname: req.body.path.substring(req.body.path.lastIndexOf('/') + 1),
     path: req.body.path,
-    time: req.body.time,
-    date: new Date(parseInt(req.body.time)).toDateString()
+    time: req.body.time
   }
 
   try {
@@ -58,7 +55,6 @@ router.post('/session/create/manual', (req, res) => {
     const result = {
       ...(result1.success && result2.success) && { success: true },
       ...(result1.error || result2.error) && { error: true },
-      ...(result1.path !== undefined) && { path: result1.path },
       result: result1.result + ' & ' + result2.result,
       sessionData
     }

@@ -69,21 +69,13 @@ export function setSocketServer (serverSocket) {
           log.info(`Download request: camera ${camIndex}, ${file?.name}`)
           if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
             const serial = SNList[camIndex]
-            const nickname = camNicknames.find(pair => pair.SN === serial).nickname
-
-            // TODO: Test logic in '!nickname'
-            let camName
-            if (!nickname) {
-              camName = `CAM_${nickname}`
-            } else {
-              camName = `SN_${serial}`
-            }
-
+            const nickname = camNicknames.find(pair => pair.SN === serial)?.nickname
+            const camName = (nickname) ? `CAM_${nickname}` : `SN_${serial}`
             const imgData = file?.downloadThumbnailToString()
             const imgBuffer = Buffer.from(imgData, 'base64')
             const imgName = `SUB_${HOST_NICKNAME}_${camName}_${file?.name}`
-
             fs.writeFileSync(path.join(DOWNLOAD_DIR, capturePath, imgName), imgBuffer, { encoding: 'utf8' })
+            file.downloadToPath(path.join(DOWNLOAD_DIR, capturePath, imgName))
           }
           break
 

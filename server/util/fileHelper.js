@@ -16,20 +16,13 @@ function numStrLeadZeros (num, digits) {
 }
 
 // Creates a unique fullname & path for provided nickname & time
-export function createSessionData (time, nickname = undefined) {
-  if (!nickname) {
-    nickname = time
-  }
+export function createSessionData (time, nickname = '') {
   const date = new Date(parseInt(time))
-
-  const fullname = `SES_${nickname}_AT_${numStrLeadZeros(date.getHours(), 2)}_${numStrLeadZeros(date.getMinutes(), 2)}_${date.toDateString()}`.replaceAll(' ', '_')
-  const path = `${fullname}`
+  const path = `SES_${nickname || time}_AT_${numStrLeadZeros(date.getHours(), 2)}_${numStrLeadZeros(date.getMinutes(), 2)}_${date.toDateString()}`.replaceAll(' ', '_')
   return {
     nickname,
-    fullname,
     path,
-    time,
-    date: date.toDateString()
+    time
   }
 }
 
