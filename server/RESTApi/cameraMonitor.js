@@ -43,7 +43,11 @@ export function enableSocketServer (enable) {
   // When enabling, send latest camera list
   if (serverEnabled && lastServerSocket) {
     log.verbose('Relaying updated camera list')
-    lastServerSocket.emit('CameraList', getCameraSummaryList())
+    try {
+      lastServerSocket.emit('CameraList', getCameraSummaryList())
+    } catch (error) {
+      log.error('Socket error (enableSocketServer):', error)
+    }
   }
 }
 
@@ -68,6 +72,14 @@ export function setSocketServer (serverSocket) {
         case camAPI.CameraBrowser.EventName.DownloadRequest:
           log.info(`Download request: camera ${camIndex}, ${file?.name}`)
           if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
+            try {
+              serverSocket
+                .to(['Download-*', `Download-${camIndex}`])
+                .emit('DownloadStart', { camIndex, filename: file?.name })
+            } catch (error) {
+              log.error('Socket error (downloadStart):', error)
+            }
+
             const serial = SNList[camIndex]
             const nickname = camNicknames.find(pair => pair.SN === serial)?.nickname
             const camName = (nickname) ? `CAM_${nickname}` : `SN_${serial}`
@@ -75,26 +87,59 @@ export function setSocketServer (serverSocket) {
             const imgBuffer = Buffer.from(imgData, 'base64')
             const imgName = `SUB_${HOST_NICKNAME}_${camName}_${file?.name}`
             fs.writeFileSync(path.join(DOWNLOAD_DIR, capturePath, imgName), imgBuffer, { encoding: 'utf8' })
+
+            try {
+              serverSocket
+                .to(['Download-*', `Download-${camIndex}`])
+                .emit('DownloadEnd', { camIndex, filename: file?.name })
+            } catch (error) {
+              log.error('Socket error (downloadEnd):', error)
+            }
           }
           break
 
         case camAPI.CameraBrowser.EventName.StateChange:
           log.verbose(`State change: camera ${camIndex} ${stateEvent.toString()}`)
+          try {
+            serverSocket
+              .to(['CameraState-*', `CameraState-${camIndex}`])
+              .emit('CameraState', stateEvent.toString())
+          } catch (error) {
+            log.error('Socket error (cameraState):', error)
+          }
           break
 
         case camAPI.CameraBrowser.EventName.PropertyChangeValue:
           log.verbose(`Property value change: camera ${camIndex} ${property.label}`)
+          try {
+            serverSocket
+              .to(['CameraPropertyValue-*', `CameraPropertyValue-${camIndex}`])
+              .emit('CameraPropertyValue', { label: property.label })
+          } catch (error) {
+            log.error('Socket error (propertyValue):', error)
+          }
           break
 
         case camAPI.CameraBrowser.EventName.PropertyChangeOptions:
           log.verbose(`Property options change: camera ${camIndex} ${property.label}`)
+          try {
+            serverSocket
+              .to(['CameraPropertyOptions-*', `CameraPropertyOptions-${camIndex}`])
+              .emit('CameraPropertyOptions', { label: property.label })
+          } catch (error) {
+            log.error('Socket error (propertyOptions):', error)
+          }
           break
 
         case camAPI.CameraBrowser.EventName.CameraAdd:
         case camAPI.CameraBrowser.EventName.CameraRemove: {
-          log.verbose('Relaying updated camera list')
+          log.info('Relaying updated camera list')
           const camList = getCameraSummaryList()
-          serverSocket.emit('CameraList', camList)
+          try {
+            serverSocket.to('CameraList').emit('CameraListUpdate', camList)
+          } catch (error) {
+            log.error('Socket error (cameraList):', error)
+          }
         } break
       }
     }, 500, log)
@@ -104,11 +149,13 @@ export function setSocketServer (serverSocket) {
 // Example client message listening (we may not need anything here)
 export function setupSocketClient (clientSocket) {
   // Respond to messages from clients
-  clientSocket.on('subscribe', subscribeListener.bind(clientSocket))
-}
+  clientSocket.on('subscribe', eventList => {
+    eventList.forEach(eventName => clientSocket.join(eventName))
+  })
 
-// 'this' is the socket inside the listener functions
-function subscribeListener (message) {
+  clientSocket.on('unsubscribe', eventList => {
+    eventList.forEach(eventName => clientSocket.leave(eventName))
+  })
 }
 
 // Set the directory to download incoming images to
