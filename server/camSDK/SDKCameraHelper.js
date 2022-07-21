@@ -1,14 +1,16 @@
 import camAPI from '@dimensional/napi-canon-cameras'
 import CameraAPIError from '../RESTApi/CameraAPIError.js'
 
-import dotenv from 'dotenv'
+import { createBulkTask } from '../RESTApi/bulkTaskManager.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
 const log = makeLogger('server', 'APIDevice')
 
-dotenv.config()
-const HOST_NICKNAME = process.env.HOST_NICKNAME || 'noname'
+// Queue a function to run as soon as it can AFTER the current event loop
+function runSoon (callback) {
+  setTimeout(callback, 0)
+}
 
 // Properties included for summary
 const SUMMARY_PROPS = [
@@ -66,50 +68,22 @@ function getCameraList (index) {
     return camAPI.cameraBrowser.getCameras()
   }
 
-  return [new camAPI.Camera(index)]
-}
-
-function summarizeResults (results) {
-  return results.reduce((prev, result, i) => (
-    result.status === 'fulfilled'
-      ? {
-          succeeded: prev.succeeded + 1,
-          failed: prev.failed,
-          messages: prev.messages
-        }
-      : {
-          succeeded: prev.succeeded,
-          failed: prev.failed + 1,
-          messages: [...prev.messages, `Camera ${i} on server ${HOST_NICKNAME}: ${result.reason.toString()}`]
-        }
-  ), { succeeded: 0, failed: 0, messages: [] })
+  return new camAPI.Camera(index)
 }
 
 /**
  * Instruct a camera to take a picture (may trigger an image download if save-to is set to HOST)
- * @param {(number|string)} index The zero-based index of the camera to take a picture on (or '*' for all cameras)
+ * @param {number} index The zero-based index of the camera to take a picture on
  * @returns {object} A summary of the results (succeeded, failed, and array of messages)
  */
-export async function takePicture (index) {
+export function takePictureForOne (index) {
   try {
     const camList = getCameraList(index)
-    const results = await Promise.allSettled(camList.map(cam => {
-      return new Promise((resolve, reject) => {
-        try {
-          cam.connect()
-          cam.takePicture()
-          return resolve()
-        } catch (err) {
-          return reject(err)
-        }
-      })
-    }))
-
-    const summary = summarizeResults(results)
-    if (summary.succeeded === 0) {
-      throw new CameraAPIError(500, results, 'Failed to take picture')
+    if (camList.length > 0) {
+      const cam = camList[0]
+      cam.connect()
+      cam.takePicture()
     }
-    return summary
   } catch (e) {
     if (e instanceof CameraAPIError) {
       throw e
@@ -122,17 +96,62 @@ export async function takePicture (index) {
 }
 
 /**
- * Simulate pressing the shutter button on the camera
- * @param {(number|string)} index The zero-based index of the camera to press the shutter for (or '*' for all cameras)
- * @param {boolean} halfway Press the shutter button only halfway (triggers auto-focus)
- * @returns {object} A summary of the results (succeeded, failed, and array of messages)
+ * Instruct all cameras to take a picture (may trigger image downloads if save-to is set to HOST)
+ * @returns {string} A unique identifier for the task (which completes later)
  */
-export async function pressShutterButton (index, halfway = false) {
+export function takePictureForAll () {
+  const camList = getCameraList('*')
+  const resultsPromise = Promise.allSettled(camList.map(cam => {
+    return new Promise((resolve, reject) => {
+      runSoon(() => {
+        try {
+          cam.connect()
+          cam.takePicture()
+          return resolve()
+        } catch (err) {
+          return reject(err)
+        }
+      })
+    })
+  }))
+
+  return createBulkTask(resultsPromise, 'Failed to trigger shutter')
+}
+
+/**
+ * Simulate pressing the shutter button on the camera
+ * @param {number} index The zero-based index of the camera to press the shutter for
+ * @param {boolean} halfway Press the shutter button only halfway (triggers auto-focus)
+ */
+export function pressShutterButtonForOne (index, halfway = false) {
   const pressType = (halfway ? camAPI.Camera.PressShutterButton.Halfway : camAPI.Camera.PressShutterButton.CompletelyNonAF)
   try {
-    const camList = getCameraList(index)
-    const results = await Promise.allSettled(camList.map(cam => {
-      return new Promise((resolve, reject) => {
+    const cam = getCameraList(index)
+    cam.connect()
+    cam.sendCommand(camAPI.Camera.Command.PressShutterButton, pressType)
+    cam.sendCommand(camAPI.Camera.Command.PressShutterButton, camAPI.Camera.PressShutterButton.OFF)
+  } catch (e) {
+    if (e instanceof CameraAPIError) {
+      throw e
+    } else if (e.message.includes('DEVICE_NOT_FOUND')) {
+      throw new CameraAPIError(404, null, `Camera ${index} not found`)
+    } else {
+      throw new CameraAPIError(500, null, `Failed to press shutter button ${halfway ? 'halfway ' : ''}for camera ${index}`, { cause: e })
+    }
+  }
+}
+
+/**
+ * Simulate pressing the shutter button on all cameras
+ * @param {boolean} halfway Press the shutter button only halfway (triggers auto-focus)
+ * @returns {string} A unique identifier for the task (which completes later)
+ */
+export function pressShutterButtonForAll (halfway = false) {
+  const pressType = (halfway ? camAPI.Camera.PressShutterButton.Halfway : camAPI.Camera.PressShutterButton.CompletelyNonAF)
+  const camList = getCameraList('*')
+  const resultsPromise = Promise.allSettled(camList.map(cam => {
+    return new Promise((resolve, reject) => {
+      runSoon(() => {
         try {
           cam.connect()
           cam.sendCommand(camAPI.Camera.Command.PressShutterButton, pressType)
@@ -143,22 +162,10 @@ export async function pressShutterButton (index, halfway = false) {
           return reject(err)
         }
       })
-    }))
+    })
+  }))
 
-    const summary = summarizeResults(results)
-    if (summary.succeeded === 0) {
-      throw new CameraAPIError(500, results, 'Failed to press shutter button')
-    }
-    return summary
-  } catch (e) {
-    if (e instanceof CameraAPIError) {
-      throw e
-    } else if (e.message.includes('DEVICE_NOT_FOUND')) {
-      throw new CameraAPIError(404, null, `Camera ${index} not found`)
-    } else {
-      throw new CameraAPIError(500, null, `Failed to press shutter button ${halfway ? 'halfway ' : ''}for camera ${index}`, { cause: e })
-    }
-  }
+  return createBulkTask(resultsPromise)
 }
 
 /**
@@ -247,12 +254,7 @@ function getProperties (cam, propList) {
   return props
 }
 
-export async function setCameraProperty (index, identifier, value) {
-  return await setCameraProperties(index, { [identifier]: value })
-}
-
-export async function setCameraProperties (index, settingsObj) {
-  // Build properties object
+function buildPropertiesObject (settingsObj) {
   const newProperties = {}
   Object.keys(settingsObj).forEach(identifier => {
     const valueOrLabel = settingsObj[identifier]
@@ -316,28 +318,26 @@ export async function setCameraProperties (index, settingsObj) {
       } break
     }
   })
+  return newProperties
+}
+
+export function setCameraPropertyForOne (index, identifier, value) {
+  return setCameraPropertiesForOne(index, { [identifier]: value })
+}
+
+export function setCameraPropertyForAll (identifier, value) {
+  return setCameraPropertiesForAll({ [identifier]: value })
+}
+
+export function setCameraPropertiesForOne (index, settingsObj) {
+  // Build properties object
+  const newProperties = buildPropertiesObject(settingsObj)
 
   // Attempt to set properties
   try {
-    const camList = getCameraList(index)
-    const results = await Promise.allSettled(camList.map(cam => {
-      return new Promise((resolve, reject) => {
-        try {
-          cam.connect()
-          cam.setProperties(newProperties)
-          // cam.disconnect()
-          return resolve()
-        } catch (err) {
-          return reject(err)
-        }
-      })
-    }))
-
-    const summary = summarizeResults(results)
-    if (summary.succeeded === 0) {
-      throw new CameraAPIError(500, results, 'Failed to set properties')
-    }
-    return summary
+    const cam = getCameraList(index)
+    cam.connect()
+    cam.setProperties(newProperties)
   } catch (e) {
     if (e instanceof CameraAPIError) {
       throw e
@@ -347,6 +347,30 @@ export async function setCameraProperties (index, settingsObj) {
       throw new CameraAPIError(500, null, 'Internal SDK Error', { cause: e })
     }
   }
+}
+
+export function setCameraPropertiesForAll (settingsObj) {
+  // Build properties object
+  const newProperties = buildPropertiesObject(settingsObj)
+
+  // Attempt to set properties
+  const camList = getCameraList('*')
+  const resultsPromise = Promise.allSettled(camList.map(cam => {
+    return new Promise((resolve, reject) => {
+      runSoon(() => {
+        try {
+          cam.connect()
+          cam.setProperties(newProperties)
+          // cam.disconnect()
+          return resolve()
+        } catch (err) {
+          return reject(err)
+        }
+      })
+    })
+  }))
+
+  return createBulkTask(resultsPromise)
 }
 
 export function computeTZValue (tzString, tzOffset) {
