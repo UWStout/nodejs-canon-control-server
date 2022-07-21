@@ -39,10 +39,10 @@ export function createBulkTask (taskPromise) {
     const summary = summarizeResults(results)
     if (summary.succeeded === 0) {
       log.error(`Bulk task ${taskId} failed`)
-      getMySocket()?.emit('taskFailed', { taskId, summary })
+      getMySocket()?.emit('BulkTaskFailed', { taskId, summary })
     } else {
       log.info(`Bulk task ${taskId} complete`)
-      getMySocket()?.emit('taskSucceeded', { taskId, summary })
+      getMySocket()?.emit('BulkTaskSucceeded', { taskId, summary })
     }
   })
 
