@@ -33,17 +33,17 @@ function summarizeResults (results) {
   ), { succeeded: 0, failed: 0, messages: [] })
 }
 
-export function createBulkTask (taskPromise) {
+export function createBulkTask (taskPromise, type) {
   const taskId = createTaskId()
-  getMySocket()?.emit('BulkTaskStarted', { taskId })
+  getMySocket()?.emit('BulkTaskStarted', { taskId, type })
   taskPromise.then((results) => {
     const summary = summarizeResults(results)
     if (summary.succeeded === 0) {
       log.error(`Bulk task ${taskId} failed`)
-      getMySocket()?.emit('BulkTaskFailed', { taskId, summary })
+      getMySocket()?.emit('BulkTaskFailed', { taskId, type, serverNickname: HOST_NICKNAME, summary })
     } else {
       log.info(`Bulk task ${taskId} complete`)
-      getMySocket()?.emit('BulkTaskSucceeded', { taskId, summary })
+      getMySocket()?.emit('BulkTaskSucceeded', { taskId, type, serverNickname: HOST_NICKNAME, summary })
     }
   })
 

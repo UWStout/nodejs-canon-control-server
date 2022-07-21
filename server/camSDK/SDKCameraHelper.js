@@ -115,7 +115,7 @@ export function takePictureForAll () {
     })
   }))
 
-  return createBulkTask(resultsPromise, 'Failed to trigger shutter')
+  return createBulkTask(resultsPromise, 'Bulk photo capture')
 }
 
 /**
@@ -165,7 +165,7 @@ export function pressShutterButtonForAll (halfway = false) {
     })
   }))
 
-  return createBulkTask(resultsPromise)
+  return createBulkTask(resultsPromise, halfway ? 'Bulk auto-focus' : 'Bulk shutter Release')
 }
 
 /**
@@ -370,7 +370,7 @@ export function setCameraPropertiesForAll (settingsObj) {
     })
   }))
 
-  return createBulkTask(resultsPromise)
+  return createBulkTask(resultsPromise, 'Bulk property change')
 }
 
 export function computeTZValue (tzString, tzOffset) {
