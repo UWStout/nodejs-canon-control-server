@@ -35,6 +35,7 @@ function summarizeResults (results) {
 
 export function createBulkTask (taskPromise) {
   const taskId = createTaskId()
+  getMySocket()?.emit('BulkTaskStarted', { taskId })
   taskPromise.then((results) => {
     const summary = summarizeResults(results)
     if (summary.succeeded === 0) {
