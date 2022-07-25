@@ -7,7 +7,7 @@ import camAPI from '@dimensional/napi-canon-cameras'
 // API Helper interface
 import { setupEventMonitoring } from '../camSDK/SDKEventHelper.js'
 import { getCameraSummaryList, portList, SNList } from '../camSDK/SDKCameraHelper.js'
-import { getCameraNicknameList } from '../util/fileHelper.js'
+import { getCameraNicknameList, getDownloadPath } from '../util/fileHelper.js'
 
 // Setup logging and environment variables
 import { makeLogger } from '../util/logging.js'
@@ -17,18 +17,12 @@ import dotenv from 'dotenv'
 // Update environment variables
 dotenv.config()
 const HOST_NICKNAME = process.env.HOST_NICKNAME || 'nickname'
-// const HOST_NAME = process.env.HOST_NAME || 'localhost'
-// const DEV_PORT = process.env.DEV_PORT || 3000
-// const PROD_PORT = process.env.PROD_PORT || 42424
-const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR || './public/images'
 
+// Initialize camera nicknames
 const camNicknames = getCameraNicknameList()
 
 // Create logger
 const log = makeLogger('server', 'monitor')
-
-// Current capture path for image downloads
-let capturePath = ''
 
 // Store local copy of server socket
 let lastServerSocket = null
@@ -86,7 +80,7 @@ export function setSocketServer (serverSocket) {
             const imgData = file?.downloadThumbnailToString()
             const imgBuffer = Buffer.from(imgData, 'base64')
             const imgName = `SUB_${HOST_NICKNAME}_${camName}_${file?.name}`
-            fs.writeFileSync(path.join(DOWNLOAD_DIR, capturePath, imgName), imgBuffer, { encoding: 'utf8' })
+            fs.writeFileSync(path.join(getDownloadPath(), imgName), imgBuffer, { encoding: 'utf8' })
 
             try {
               serverSocket
@@ -156,13 +150,4 @@ export function setupSocketClient (clientSocket) {
   clientSocket.on('unsubscribe', eventList => {
     eventList.forEach(eventName => clientSocket.leave(eventName))
   })
-}
-
-// Set the directory to download incoming images to
-export function setCapturePath (path) {
-  capturePath = path
-}
-
-export function getCapturePath () {
-  return capturePath
 }

@@ -1,12 +1,15 @@
 // Basic HTTP routing library
 import Express from 'express'
 
-import { setCapturePath } from './cameraMonitor.js'
-import { createFolder, addSessionToList, createSessionData } from '../util/fileHelper.js'
+import { ensureFolderExists, setDownloadPath } from '../util/fileHelper.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
+import CameraAPIError from './CameraAPIError.js'
 const log = makeLogger('server', 'main-writ')
+
+// Default capture number if none was provided
+const DEFAULT_CAPTURE_NUMBER = 1
 
 // Create a router to attach to an express server app
 const router = new Express.Router()
@@ -16,74 +19,97 @@ router.use(Express.json())
 log.info('Server Writer Routes Active')
 
 // ******* Writing routes **************
-router.post('/session/create/auto/:mstime/:nickname?', (req, res) => {
-  try {
-    const sessionData = createSessionData(req.params.mstime, req.params.nickname || '')
-    const result1 = createFolder(sessionData.path)
-    if (result1.error) {
-      return res.send(result1)
-    }
+router.post(['/session/create', '/session/confirm'], (req, res) => {
+  // Determine which route was matched
+  const createAllowed = req.path.includes('create')
 
-    const result2 = addSessionToList(sessionData)
-    const result = {
-      ...(result1.success && result2.success) && { success: true },
-      ...(result1.error || result2.error) && { error: true },
-      result: result1.result + ' & ' + result2.result,
-      sessionData
-    }
-
-    return res.send(result)
-  } catch (err) {
-    return res.send({ error: true })
-  }
-})
-
-router.post('/session/create/manual', (req, res) => {
+  // Read session data either directly from body in the 'sessionData' property
   const sessionData = req.body.sessionData || {
     nickname: req.body.nickname,
     path: req.body.path,
     time: req.body.time
   }
 
+  // Remove trailing path separators
+  if (sessionData.path.slice(-1) === '/' || sessionData.path.slice(-1) === '\\') {
+    sessionData.path = sessionData.path.slice(0, -1)
+  }
+
   try {
-    const result1 = createFolder(sessionData.path)
-    if (result1.error) {
-      return res.send(result1)
+    // Ensure no sub-directories are specified
+    if (sessionData.path.includes('/') || sessionData.path.includes('\\')) {
+      throw new CameraAPIError(400, null, 'Path cannot include subdirectories')
     }
 
-    const result2 = addSessionToList(sessionData)
-    const result = {
-      ...(result1.success && result2.success) && { success: true },
-      ...(result1.error || result2.error) && { error: true },
-      result: result1.result + ' & ' + result2.result,
-      sessionData
-    }
-
-    return res.send(result)
+    ensureFolderExists(sessionData.path, '', createAllowed)
+    return res.send('OK')
   } catch (err) {
-    return res.send({ error: true })
+    CameraAPIError.respond(err, res, log, { folderName: sessionData.path })
   }
 })
 
-router.post('/capture/create', (req, res) => {
+function validateCaptureNumber (captureNumber) {
+  // Interpret the capture number
+  if (typeof captureNumber === 'number') {
+    return captureNumber
+  }
+
+  if (typeof captureNumber === 'string') {
+    return parseInt(captureNumber)
+  }
+
+  return DEFAULT_CAPTURE_NUMBER
+}
+
+router.post(['/capture/create', '/capture/confirm'], (req, res) => {
+  // Interpret the capture number
+  const captureInt = validateCaptureNumber(req.body.captureNumber)
+
+  // Read request properties
+  const createAllowed = req.path.includes('create')
+  const folderName = req.body.folderName || 'Capture'
+
   try {
-    const folderName = req.body.folderName || 'Capture_'
-    const result = createFolder(`${folderName}${req.body.captureNumber}`, req.body.sessionPath)
-    return res.send(result)
+    // Ensure the capture number is valid
+    if (isNaN(captureInt) || captureInt < 0) {
+      throw new CameraAPIError(400, null, 'Capture number must be a non-negative number')
+    }
+
+    // Ensure the requested folder exists (possibly creating it)
+    const captureNumber = captureInt.toFixed().padStart(3, '0')
+    ensureFolderExists(`${folderName}_${captureNumber}`, req.body.sessionPath, createAllowed)
+    return res.send('OK')
   } catch (err) {
-    return res.send({ error: true })
+    CameraAPIError.respond(err, res, log, {
+      folderName,
+      captureNumber: captureInt,
+      parent: req.body.sessionPath
+    })
   }
 })
 
 router.post('/capture/select', (req, res) => {
+  // Interpret the capture number
+  const captureInt = validateCaptureNumber(req.body.captureNumber)
+  const folderName = req.body.captureName || 'Capture'
+  const sessionPath = req.body.sessionPath
+
   try {
-    setCapturePath(req.body.capturePath)
-    return res.send({
-      success: true,
-      path: req.body.capturePath
-    })
+    // Ensure the capture number is valid
+    if (isNaN(captureInt) || captureInt < 0) {
+      throw new CameraAPIError(400, null, 'Capture number must be a non-negative number')
+    }
+
+    // Seth the proper download path (if it exists)
+    const captureNumber = captureInt.toFixed().padStart(3, '0')
+    setDownloadPath(sessionPath, `${folderName}_${captureNumber}`)
+    return res.send('OK')
   } catch (err) {
-    return res.send({ error: true })
+    CameraAPIError.respond(err, res, log, {
+      sessionPath,
+      captureName: folderName,
+      captureNumber: captureInt
+    })
   }
 })
 

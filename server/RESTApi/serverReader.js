@@ -1,8 +1,7 @@
 // Basic HTTP routing library
 import Express from 'express'
 
-import { getSessions } from '../util/fileHelper.js'
-import { getCapturePath } from './cameraMonitor.js'
+import { getDownloadPath, getSessions } from '../util/fileHelper.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
@@ -16,22 +15,19 @@ log.info('Server Reader Routes Active')
 
 router.get('/capture/current', (req, res) => {
   try {
-    const capturePath = getCapturePath()
-    return res.send({
-      success: true,
-      capturePath
-    })
+    const capturePath = getDownloadPath()
+    return res.send(capturePath)
   } catch (err) {
-    return res.send({ error: true })
+    return res.status(500).send({ error: true })
   }
 })
 
-router.get('/sessions', (req, res) => {
+router.get('/sessions', async (req, res) => {
   try {
-    const result = getSessions()
+    const result = await getSessions()
     return res.send(result)
-  } catch (err) {
-    return res.send({ error: true })
+  } catch (error) {
+    return res.status(500).send({ error: true, message: error.message })
   }
 })
 
