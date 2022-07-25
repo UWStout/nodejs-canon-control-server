@@ -77,13 +77,17 @@ makeSocket(server)
 // Bind to a port and start listening
 if (_DEV_) {
   server.listen(DEV_PORT, HOST_NAME, () => {
-    serverReady()
     log.info(`PARSEC Camera DEV server listening on https://${HOST_NAME}:${DEV_PORT}`)
+
+    // Wait for initial property and camera add events to clear before enabling socket messages
+    setTimeout(() => { log.info('Enabling sockets'); serverReady() }, 2000)
   })
 } else {
   server.listen(PROD_PORT, HOST_NAME, () => {
-    serverReady()
     log.info(`PARSEC Camera server listening on https://${HOST_NAME}:${PROD_PORT}`)
+
+    // Wait for initial property and camera add events to clear before enabling socket messages
+    setTimeout(() => { log.info('Enabling sockets'); serverReady() }, 2000)
   })
 }
 
