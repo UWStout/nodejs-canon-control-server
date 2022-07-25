@@ -2,10 +2,14 @@
 import Express from 'express'
 
 import {
-  setCameraProperty,
-  takePicture,
-  pressShutterButton,
-  setCameraProperties
+  setCameraPropertyForOne,
+  setCameraPropertyForAll,
+  setCameraPropertiesForOne,
+  setCameraPropertiesForAll,
+  takePictureForOne,
+  takePictureForAll,
+  pressShutterButtonForOne,
+  pressShutterButtonForAll
   // computeTZValue
 } from '../camSDK/SDKCameraHelper.js'
 
@@ -36,21 +40,31 @@ function validateIndex (req, message = 'Writing') {
 }
 
 // ******* API Camera Writing routes **************
-router.post('/:index/trigger', async (req, res) => {
+router.post('/:index/trigger', (req, res) => {
   try {
     const index = validateIndex(req, 'Taking picture')
-    const results = await takePicture(isNaN(index) ? '*' : index)
-    return res.send({ status: 'OK', results })
+    if (isNaN(index)) {
+      const taskId = takePictureForAll()
+      return res.status(202).send({ status: 'STARTED', taskId })
+    } else {
+      const result = takePictureForOne(index)
+      return res.send({ status: 'OK', result })
+    }
   } catch (err) {
     return CameraAPIError.respond(err, res, log, { index: req.params.index })
   }
 })
 
-router.post('/:index/halfShutter', async (req, res) => {
+router.post('/:index/halfShutter', (req, res) => {
   try {
     const index = validateIndex(req, 'Halfway shutter press')
-    const results = await pressShutterButton(isNaN(index) ? '*' : index, true)
-    return res.send({ status: 'OK', results })
+    if (isNaN(index)) {
+      const taskId = pressShutterButtonForAll(true)
+      return res.status(202).send({ status: 'STARTED', taskId })
+    } else {
+      const result = pressShutterButtonForOne(index, true)
+      return res.send({ status: 'OK', result })
+    }
   } catch (err) {
     return CameraAPIError.respond(err, res, log, { index: req.params.index })
   }
@@ -59,8 +73,13 @@ router.post('/:index/halfShutter', async (req, res) => {
 router.post('/:index/fullShutter', async (req, res) => {
   try {
     const index = validateIndex(req, 'Full shutter press')
-    const results = await pressShutterButton(isNaN(index) ? '*' : index)
-    return res.send({ status: 'OK', results })
+    if (isNaN(index)) {
+      const taskId = pressShutterButtonForAll(false)
+      return res.status(202).send({ status: 'STARTED', taskId })
+    } else {
+      const result = pressShutterButtonForOne(index, false)
+      return res.send({ status: 'OK', result })
+    }
   } catch (err) {
     return CameraAPIError.respond(err, res, log, { index: req.params.index })
   }
@@ -71,19 +90,30 @@ router.post('/:index/syncTime', async (req, res) => {
   // const tzString = Intl.DateTimeFormat().resolvedOptions().timeZone
   try {
     const index = validateIndex(req, 'Synchronizing date and time')
-    const results = await setCameraProperty(isNaN(index) ? '*' : index, 'UTCTime', now)
-    // setCameraProperty(isNaN(index) ? '*' : index, 'TimeZone', computeTZValue(tzString))
-    return res.send({ status: 'OK', results })
+    if (isNaN(index)) {
+      const taskId = setCameraPropertyForAll('UTCTime', now)
+      // setCameraPropertyForAll('TimeZone', computeTZValue(tzString))
+      return res.status(202).send({ status: 'STARTED', taskId })
+    } else {
+      const result = setCameraPropertyForOne(index, 'UTCTime', now)
+      // setCameraPropertyForOne(index, 'TimeZone', computeTZValue(tzString))
+      return res.send({ status: 'OK', result })
+    }
   } catch (err) {
     return CameraAPIError.respond(err, res, log, { index: req.params.index, value: now.getTime() })
   }
 })
 
-router.post('/:index/:propID', async (req, res) => {
+router.post('/:index/:propID', (req, res) => {
   try {
     const index = validateIndex(req, `Setting ${req.params.propID}`)
-    const results = await setCameraProperty(isNaN(index) ? '*' : index, req.params.propID, req.body.value)
-    return res.send({ status: 'OK', results })
+    if (isNaN(index)) {
+      const taskId = setCameraPropertyForAll(req.params.propID, req.body.value)
+      return res.status(202).send({ status: 'STARTED', taskId })
+    } else {
+      const result = setCameraPropertyForOne(index, req.params.propID, req.body.value)
+      return res.send({ status: 'OK', result })
+    }
   } catch (err) {
     return CameraAPIError.respond(err, res, log, {
       index: req.params.index,
@@ -96,8 +126,13 @@ router.post('/:index/:propID', async (req, res) => {
 router.post('/:index', async (req, res) => {
   try {
     const index = validateIndex(req, 'Setting bulk properties')
-    const results = await setCameraProperties(isNaN(index) ? '*' : index, req.body)
-    return res.send({ status: 'OK', results })
+    if (isNaN(index)) {
+      const taskId = setCameraPropertiesForAll(req.body)
+      return res.status(202).send({ status: 'STARTED', taskId })
+    } else {
+      setCameraPropertiesForOne(index, req.body)
+      return res.send({ status: 'OK' })
+    }
   } catch (err) {
     return CameraAPIError.respond(err, res, log, { index: req.params.index, body: req.body })
   }
