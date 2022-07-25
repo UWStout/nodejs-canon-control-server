@@ -46,19 +46,19 @@ const humanTextLogFormat = (colorize = true) => (
 const jsonLogFormat = winston.format.json()
 
 // Console Transport
-const consoleTransport = new winston.transports.Console({
+const consoleTransport = () => (new winston.transports.Console({
   level: 'info',
   format: humanTextLogFormat(true)
-})
+}))
 
 // Logz.io Transport
-const logzioWinstonTransport = new LogzioWinstonTransport({
+const logzioWinstonTransport = () => (new LogzioWinstonTransport({
   level: 'info',
   name: 'winston_logzio',
   token: LOGZIO_TOKEN,
   host: LOGZIO_LISTENER,
   format: jsonLogFormat
-})
+}))
 
 // Daily rotating file transport
 const rotateFileSharedConfig = {
@@ -70,40 +70,40 @@ const rotateFileSharedConfig = {
 }
 
 // Local rotating file for 'info' and higher messages
-const infoFileJsonTransport = new winston.transports.DailyRotateFile({
+const infoFileJsonTransport = () => (new winston.transports.DailyRotateFile({
   ...rotateFileSharedConfig,
   filename: path.join('log', '%DATE%-info-json.log'),
   format: jsonLogFormat
-})
+}))
 
-const infoFileTextTransport = new winston.transports.DailyRotateFile({
+const infoFileTextTransport = () => (new winston.transports.DailyRotateFile({
   ...rotateFileSharedConfig,
   filename: path.join('log', '%DATE%-info-txt.log'),
   format: humanTextLogFormat(false)
-})
+}))
 
 // Local rotating file for 'error' messages only
-const errorFileJsonTransport = new winston.transports.DailyRotateFile({
+const errorFileJsonTransport = () => (new winston.transports.DailyRotateFile({
   ...rotateFileSharedConfig,
   level: 'error',
   filename: path.join('log', '%DATE%-error-json.log'),
   format: jsonLogFormat
-})
+}))
 
-const errorFileTextTransport = new winston.transports.DailyRotateFile({
+const errorFileTextTransport = () => (new winston.transports.DailyRotateFile({
   ...rotateFileSharedConfig,
   level: 'error',
   filename: path.join('log', '%DATE%-error-txt.log'),
   format: humanTextLogFormat(false)
-})
+}))
 
 // All common file transports
-const allFileTransports = [
-  infoFileJsonTransport,
-  infoFileTextTransport,
-  errorFileJsonTransport,
-  errorFileTextTransport
-]
+const allFileTransports = () => ([
+  infoFileJsonTransport(),
+  infoFileTextTransport(),
+  errorFileJsonTransport(),
+  errorFileTextTransport()
+])
 
 // Construct a logger config with our intended format and transports
 const makeConfig = (label) => ({
@@ -116,12 +116,12 @@ const makeConfig = (label) => ({
   transports: (
     _DEV_
       ? [
-          consoleTransport,
-          ...allFileTransports
+          consoleTransport(),
+          ...allFileTransports()
         ]
       : [
-          logzioWinstonTransport,
-          ...allFileTransports
+          logzioWinstonTransport(),
+          ...allFileTransports()
         ]
   )
 })
