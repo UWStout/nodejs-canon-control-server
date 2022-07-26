@@ -21,7 +21,7 @@ let downloadPath = ''
 // Set the directory to download incoming images to
 export function setDownloadPath (sessionPath, capturePath) {
   ensureFolderExists(capturePath, sessionPath, false)
-  downloadPath = path.join(DOWNLOAD_DIR, sessionPath, capturePath)
+  downloadPath = path.join(sessionPath, capturePath)
 }
 
 // Retrieve current directory images should download into

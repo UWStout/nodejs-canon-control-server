@@ -17,6 +17,7 @@ import dotenv from 'dotenv'
 // Update environment variables
 dotenv.config()
 const HOST_NICKNAME = process.env.HOST_NICKNAME || 'nickname'
+const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR || './public/images'
 
 // Initialize camera nicknames
 const camNicknames = getCameraNicknameList()
@@ -80,7 +81,11 @@ export function setSocketServer (serverSocket) {
             const imgData = file?.downloadThumbnailToString()
             const imgBuffer = Buffer.from(imgData, 'base64')
             const imgName = `SUB_${HOST_NICKNAME}_${camName}_${file?.name}`
-            fs.writeFileSync(path.join(getDownloadPath(), imgName), imgBuffer, { encoding: 'utf8' })
+            fs.writeFileSync(
+              path.join(DOWNLOAD_DIR, getDownloadPath(), imgName),
+              imgBuffer,
+              { encoding: 'utf8' }
+            )
 
             try {
               serverSocket
