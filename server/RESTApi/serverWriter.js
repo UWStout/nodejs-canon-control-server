@@ -67,7 +67,7 @@ router.post(['/capture/create', '/capture/confirm'], (req, res) => {
 
   // Read request properties
   const createAllowed = req.path.includes('create')
-  const folderName = req.body.folderName || 'Capture'
+  const captureName = req.body.captureName || 'Capture'
 
   try {
     // Ensure the capture number is valid
@@ -77,11 +77,11 @@ router.post(['/capture/create', '/capture/confirm'], (req, res) => {
 
     // Ensure the requested folder exists (possibly creating it)
     const captureNumber = captureInt.toFixed().padStart(3, '0')
-    ensureFolderExists(`${folderName}_${captureNumber}`, req.body.sessionPath, createAllowed)
+    ensureFolderExists(`${captureName}_${captureNumber}`, req.body.sessionPath, createAllowed)
     return res.send('OK')
   } catch (err) {
     CameraAPIError.respond(err, res, log, {
-      folderName,
+      captureName,
       captureNumber: captureInt,
       parent: req.body.sessionPath
     })
@@ -91,7 +91,7 @@ router.post(['/capture/create', '/capture/confirm'], (req, res) => {
 router.post('/capture/select', (req, res) => {
   // Interpret the capture number
   const captureInt = validateCaptureNumber(req.body.captureNumber)
-  const folderName = req.body.captureName || 'Capture'
+  const captureName = req.body.captureName || 'Capture'
   const sessionPath = req.body.sessionPath
 
   try {
@@ -102,12 +102,12 @@ router.post('/capture/select', (req, res) => {
 
     // Seth the proper download path (if it exists)
     const captureNumber = captureInt.toFixed().padStart(3, '0')
-    setDownloadPath(sessionPath, `${folderName}_${captureNumber}`)
+    setDownloadPath(sessionPath, `${captureName}_${captureNumber}`)
     return res.send('OK')
   } catch (err) {
     CameraAPIError.respond(err, res, log, {
       sessionPath,
-      captureName: folderName,
+      captureName,
       captureNumber: captureInt
     })
   }
