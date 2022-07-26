@@ -91,7 +91,7 @@ router.post('/:index/syncTime', async (req, res) => {
   try {
     const index = validateIndex(req, 'Synchronizing date and time')
     if (isNaN(index)) {
-      const taskId = setCameraPropertyForAll('UTCTime', now)
+      const taskId = setCameraPropertyForAll('UTCTime', now, 'Bulk clock sync')
       // setCameraPropertyForAll('TimeZone', computeTZValue(tzString))
       return res.status(202).send({ status: 'STARTED', taskId })
     } else {

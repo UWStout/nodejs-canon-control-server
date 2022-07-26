@@ -325,8 +325,8 @@ export function setCameraPropertyForOne (index, identifier, value) {
   return setCameraPropertiesForOne(index, { [identifier]: value })
 }
 
-export function setCameraPropertyForAll (identifier, value) {
-  return setCameraPropertiesForAll({ [identifier]: value })
+export function setCameraPropertyForAll (identifier, value, type = 'Bulk property change') {
+  return setCameraPropertiesForAll({ [identifier]: value }, type)
 }
 
 export function setCameraPropertiesForOne (index, settingsObj) {
@@ -349,7 +349,7 @@ export function setCameraPropertiesForOne (index, settingsObj) {
   }
 }
 
-export function setCameraPropertiesForAll (settingsObj) {
+export function setCameraPropertiesForAll (settingsObj, type = 'Bulk property change') {
   // Build properties object
   const newProperties = buildPropertiesObject(settingsObj)
 
@@ -370,7 +370,7 @@ export function setCameraPropertiesForAll (settingsObj) {
     })
   }))
 
-  return createBulkTask(resultsPromise, 'Bulk property change')
+  return createBulkTask(resultsPromise, type)
 }
 
 export function computeTZValue (tzString, tzOffset) {

@@ -67,6 +67,7 @@ export function setSocketServer (serverSocket) {
         case camAPI.CameraBrowser.EventName.DownloadRequest:
           log.info(`Download request: camera ${camIndex}, ${file?.name}`)
           if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
+            // Send start signal via sockets
             try {
               serverSocket
                 .to(['Download-*', `Download-${camIndex}`])
@@ -75,6 +76,7 @@ export function setSocketServer (serverSocket) {
               log.error('Socket error (downloadStart):', error)
             }
 
+            // Download file
             const serial = SNList[camIndex]
             const nickname = camNicknames.find(pair => pair.SN === serial)?.nickname
             const camName = (nickname) ? `CAM_${nickname}` : `SN_${serial}`
@@ -87,6 +89,7 @@ export function setSocketServer (serverSocket) {
               { encoding: 'utf8' }
             )
 
+            // Send completion signal via sockets
             try {
               serverSocket
                 .to(['Download-*', `Download-${camIndex}`])
