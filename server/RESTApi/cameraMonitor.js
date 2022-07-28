@@ -7,7 +7,7 @@ import camAPI from '@dimensional/napi-canon-cameras'
 // API Helper interface
 import { setupEventMonitoring } from '../camSDK/SDKEventHelper.js'
 import { getCameraSummaryList, portList, SNList } from '../camSDK/SDKCameraHelper.js'
-import { getCameraNicknames, getDownloadPath } from '../util/fileHelper.js'
+import { getCameraNicknames, getDownloadPath, getExposureInfo } from '../util/fileHelper.js'
 
 // Setup logging and environment variables
 import { makeLogger } from '../util/logging.js'
@@ -64,36 +64,42 @@ export function setSocketServer (serverSocket) {
         case camAPI.CameraBrowser.EventName.DownloadRequest:
           log.info(`Download request: camera ${camIndex}, ${file?.name}`)
           if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
+            // Prepare filename
+            const serial = SNList[camIndex]
+            const nickname = getCameraNicknames()[serial]
+            const camName = (nickname) || `SN_${serial}`
+            const imgName = `SUB_${HOST_NICKNAME}_${camName}${path.extname(file.name)?.toLowerCase() || '.jpg'}`
+
             // Send start signal via sockets
             try {
               serverSocket
                 .to(['Download-*', `Download-${camIndex}`])
-                .emit('DownloadStart', { camIndex, filename: file?.name })
+                .emit('DownloadStart', { camIndex, filename: imgName })
             } catch (error) {
               log.error('Socket error (downloadStart):', error)
             }
 
-            // Download file
-            const serial = SNList[camIndex]
-            const nickname = getCameraNicknames()[serial]
-            const camName = (nickname) || `SN_${serial}`
-            const imgData = file?.downloadThumbnailToString()
+            // Download image data
+            const imgData = file.downloadThumbnailToString()
             const imgBuffer = Buffer.from(imgData, 'base64')
-            const imgName = `SUB_${HOST_NICKNAME}_${camName}_${file?.name}`
+
+            // Save it to a file
             fs.writeFileSync(
               path.join(DOWNLOAD_DIR, getDownloadPath(), imgName),
               imgBuffer,
               { encoding: 'utf8' }
             )
 
-            // Send completion signal via sockets
-            try {
-              serverSocket
-                .to(['Download-*', `Download-${camIndex}`])
-                .emit('DownloadEnd', { camIndex, filename: file?.name })
-            } catch (error) {
-              log.error('Socket error (downloadEnd):', error)
-            }
+            // Send completion signal with exposure info via sockets
+            getExposureInfo(imgBuffer).then(exposureInfo => {
+              try {
+                serverSocket
+                  .to(['Download-*', `Download-${camIndex}`])
+                  .emit('DownloadEnd', { camIndex, exposureInfo, filename: imgName })
+              } catch (error) {
+                log.error('Socket error (downloadEnd):', error)
+              }
+            })
           }
           break
 

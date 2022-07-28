@@ -1,6 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 
+import exif from 'exif'
+
 // Update environment variables
 import dotenv from 'dotenv'
 
@@ -144,4 +146,29 @@ export function updateCameraNicknames (updatedNicknames) {
     JSON.stringify(newNicknames, null, 2),
     { encoding: 'utf8' }
   )
+}
+
+export function getExposureInfo (fileBuffer) {
+  return new Promise((resolve, reject) => {
+    try {
+      exif.ExifImage({ image: fileBuffer }, (error, data) => {
+        if (error) {
+          return reject(new Error('Error extracting EXIF data', { cause: error }))
+        }
+
+        return resolve({
+          shutterSpeed: data.exif.ExposureTime,
+          apertureValue: data.exif.FNumber,
+          iso: data.exif.ISO,
+          focalLength: data.exif.FocalLength,
+          whiteBalance: data.exif.WhiteBalance,
+          exposureComp: data.exif.ExposureCompensation,
+          width: data.exif.ExifImageWidth,
+          height: data.exif.ExifImageHeight
+        })
+      })
+    } catch (error) {
+      return reject(new Error('Error extracting EXIF data', { cause: error }))
+    }
+  })
 }
