@@ -75,8 +75,8 @@ export function setSocketServer (serverSocket) {
 
             // Download file
             const serial = SNList[camIndex]
-            const nickname = getCameraNicknames().find(pair => pair.SN === serial)?.nickname
-            const camName = (nickname) ? `CAM_${nickname}` : `SN_${serial}`
+            const nickname = getCameraNicknames()[serial]
+            const camName = (nickname) || `SN_${serial}`
             const imgData = file?.downloadThumbnailToString()
             const imgBuffer = Buffer.from(imgData, 'base64')
             const imgName = `SUB_${HOST_NICKNAME}_${camName}_${file?.name}`
