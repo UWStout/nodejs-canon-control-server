@@ -1,7 +1,7 @@
 // Basic HTTP routing library
 import Express from 'express'
 
-import { ensureFolderExists, setDownloadPath } from '../util/fileHelper.js'
+import { ensureFolderExists, setDownloadPath, updateCameraNicknames } from '../util/fileHelper.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
@@ -111,6 +111,13 @@ router.post('/capture/select', (req, res) => {
       captureNumber: captureInt
     })
   }
+})
+
+// Quickly update the list of camera nicknames
+router.post('/nicknames', (req, res) => {
+  const newNicknames = req.body
+  updateCameraNicknames(newNicknames)
+  res.send('OK')
 })
 
 export default router

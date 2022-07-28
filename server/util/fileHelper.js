@@ -12,6 +12,8 @@ const log = makeLogger('server', 'file-util')
 dotenv.config()
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR || './public/images'
 
+const NICKNAME_FILE_PATH = './server/util/CameraNicknames.json'
+
 // Regular expression to break down session folder data
 const SESSION_FOLDER_REGEX = /^SES_(?<nickname>.*)_AT_(?<hour>\d*)_(?<minute>\d*)_(?<day>[a-z]*)_(?<month>[a-z]*)_(?<date>\d*)_(?<year>\d*)$/mi
 
@@ -125,11 +127,21 @@ export function createFolder (folderName, parentDir = '') {
   }
 }
 
-export function getCameraNicknameList () {
+export function getCameraNicknames () {
   // Read list of camera nicknames into array
-  const rawData = fs.readFileSync(
-    './server/RESTApi/CameraNicknames.json',
+  const rawData = fs.readFileSync(NICKNAME_FILE_PATH, { encoding: 'utf8' })
+  return JSON.parse(rawData)
+}
+
+export function updateCameraNicknames (updatedNicknames) {
+  // Get list of existing nicknames and merge
+  const currentNicknames = getCameraNicknames()
+  const newNicknames = { ...currentNicknames, ...updatedNicknames }
+
+  // Write back to 'CameraNicknames' file
+  fs.writeFileSync(
+    NICKNAME_FILE_PATH,
+    JSON.stringify(newNicknames, null, 2),
     { encoding: 'utf8' }
   )
-  return JSON.parse(rawData)
 }

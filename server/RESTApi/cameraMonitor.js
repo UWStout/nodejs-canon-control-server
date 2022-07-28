@@ -7,7 +7,7 @@ import camAPI from '@dimensional/napi-canon-cameras'
 // API Helper interface
 import { setupEventMonitoring } from '../camSDK/SDKEventHelper.js'
 import { getCameraSummaryList, portList, SNList } from '../camSDK/SDKCameraHelper.js'
-import { getCameraNicknameList, getDownloadPath } from '../util/fileHelper.js'
+import { getCameraNicknames, getDownloadPath } from '../util/fileHelper.js'
 
 // Setup logging and environment variables
 import { makeLogger } from '../util/logging.js'
@@ -18,9 +18,6 @@ import dotenv from 'dotenv'
 dotenv.config()
 const HOST_NICKNAME = process.env.HOST_NICKNAME || 'nickname'
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR || './public/images'
-
-// Initialize camera nicknames
-const camNicknames = getCameraNicknameList()
 
 // Create logger
 const log = makeLogger('server', 'monitor')
@@ -78,7 +75,7 @@ export function setSocketServer (serverSocket) {
 
             // Download file
             const serial = SNList[camIndex]
-            const nickname = camNicknames.find(pair => pair.SN === serial)?.nickname
+            const nickname = getCameraNicknames().find(pair => pair.SN === serial)?.nickname
             const camName = (nickname) ? `CAM_${nickname}` : `SN_${serial}`
             const imgData = file?.downloadThumbnailToString()
             const imgBuffer = Buffer.from(imgData, 'base64')
