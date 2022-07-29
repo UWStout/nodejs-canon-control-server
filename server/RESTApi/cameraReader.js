@@ -9,6 +9,7 @@ import {
 } from '../camSDK/SDKCameraHelper.js'
 
 import CameraAPIError from './CameraAPIError.js'
+import { expressLiveView } from '../util/liveViewRoute.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
@@ -52,6 +53,15 @@ router.get('/:index', (req, res) => {
   try {
     const cameraDetails = getCameraInfo(parseInt(req.params.index), false)
     return res.json(cameraDetails)
+  } catch (e) {
+    CameraAPIError.respond(e, res, log)
+  }
+})
+
+router.get('/:index/liveView', (req, res) => {
+  log.info(`starting liveView for camera ${req.params.index}`)
+  try {
+    expressLiveView(req, res)
   } catch (e) {
     CameraAPIError.respond(e, res, log)
   }
