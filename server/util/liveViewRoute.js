@@ -10,6 +10,9 @@ const log = makeLogger('server', 'liveView')
 // How frequently to check for Live View images (defaults to approx. 24fps)
 const IMAGE_INTERVAL_TIME = 5
 
+// How long to wait for the stream to close if it is already busy
+const WAIT_FOR_CLOSE = 3000
+
 // Setup event watching for EDSDK
 const events = new EventEmitter()
 events.on(
@@ -29,12 +32,21 @@ camAPI.cameraBrowser.setEventHandler(
 camAPI.watchCameras()
 
 // Reference to the currently active MJPEGHandler and camera (if any)
+let currentIndex = -1
 let currentHandler = null
 let currentCamera = null
 let intervalCallback = null
 
 // Release resources and stop live view mode and stream
-export function stopLiveView () {
+export function stopLiveView (index) {
+  // Only clear the specified index if one was provided
+  if (typeof index !== 'undefined' && index !== currentIndex) {
+    return
+  }
+
+  // Clear current stream
+  currentIndex = -1
+
   // Stop the image pump
   if (intervalCallback !== null) {
     clearInterval(intervalCallback)
@@ -56,14 +68,16 @@ export function stopLiveView () {
 
 // Canon LiveView express middleware
 // - If your route contains a parameter ':index' the camera at that index will be used
-export function expressLiveView (req, res) {
+export async function expressLiveView (req, res) {
   // Only one stream can be active at a time
-  if (currentCamera !== null) {
-    return res.status(405).send('Multiple streams not supported')
+  if (currentIndex >= 0) { stopLiveView() }
+  if (currentIndex >= 0) {
+    return res.status(500).send('Failed to stop current live view. Cannot start a new live view.')
   }
 
   // Read the camera index from the route params
   const cameraIndex = parseInt(req.params.index) || 0
+  currentIndex = cameraIndex
 
   // Attempt to find and connect to camera
   const camera = camAPI.cameraBrowser.getCamera(cameraIndex)
@@ -105,6 +119,6 @@ export function expressLiveView (req, res) {
   )
 
   // Stop streaming when request closes or ends
-  req.on('close', stopLiveView)
-  req.on('end', stopLiveView)
+  req.on('close', () => stopLiveView(cameraIndex))
+  req.on('end', () => stopLiveView(cameraIndex))
 }

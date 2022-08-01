@@ -32,7 +32,7 @@ export async function startLiveView (cameraIndex, mySocket, clientSocket) {
     () => {
       try {
         const imageData = camera.downloadLiveViewImage()
-        mySocket.to(clientSocket).emit('LiveViewImage', { cameraIndex, imageData })
+        mySocket.emit('LiveViewImage', { cameraIndex, imageData })
       } catch (e) {
         if (!e.message.includes('OBJECT_NOTREADY')) {
           log.error('LiveView image download error:', e.message)
