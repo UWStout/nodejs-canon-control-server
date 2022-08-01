@@ -148,7 +148,7 @@ export function updateCameraNicknames (updatedNicknames) {
   )
 }
 
-export function getExposureInfo (fileBuffer) {
+export function getImageInfo (fileBuffer) {
   return new Promise((resolve, reject) => {
     try {
       exif.ExifImage({ image: fileBuffer }, (error, data) => {
@@ -164,7 +164,8 @@ export function getExposureInfo (fileBuffer) {
           whiteBalance: data.exif.WhiteBalance,
           exposureComp: data.exif.ExposureCompensation,
           width: data.exif.ExifImageWidth,
-          height: data.exif.ExifImageHeight
+          height: data.exif.ExifImageHeight,
+          orientation: data.image.orientation
         })
       })
     } catch (error) {

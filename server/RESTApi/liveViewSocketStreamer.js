@@ -56,6 +56,7 @@ function startLiveView (mySocket) {
       } catch (e) {
         if (!e.message.includes('OBJECT_NOTREADY')) {
           log.error('LiveView image download error:', e.message)
+          stopLiveView()
         }
       }
     },
@@ -64,10 +65,9 @@ function startLiveView (mySocket) {
 }
 
 export async function stopLiveView () {
-  log.info('Stopping live view')
-
   // Stop the image pump
   if (intervalCallback !== null) {
+    log.info('Stopping live view')
     clearInterval(intervalCallback)
     intervalCallback = null
   }

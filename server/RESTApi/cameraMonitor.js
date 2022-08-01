@@ -7,7 +7,7 @@ import camAPI from '@dimensional/napi-canon-cameras'
 // API Helper interface
 import { setupEventMonitoring } from '../camSDK/SDKEventHelper.js'
 import { getCameraSummaryList, portList, SNList } from '../camSDK/SDKCameraHelper.js'
-import { getCameraNicknames, getDownloadPath, getExposureInfo } from '../util/fileHelper.js'
+import { getCameraNicknames, getDownloadPath, getImageInfo } from '../util/fileHelper.js'
 import { setLiveViewCamera, stopLiveView } from './liveViewSocketStreamer.js'
 
 // Setup logging and environment variables
@@ -92,7 +92,7 @@ export function setSocketServer (serverSocket) {
             )
 
             // Send completion signal with exposure info via sockets
-            getExposureInfo(imgBuffer).then(exposureInfo => {
+            getImageInfo(imgBuffer).then(exposureInfo => {
               try {
                 serverSocket
                   .to(['Download-*', `Download-${camIndex}`])

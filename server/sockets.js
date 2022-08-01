@@ -4,6 +4,9 @@ import * as io from 'socket.io'
 // Web socket message handler
 import { enableSocketServer, setSocketServer, setupSocketClient } from './RESTApi/cameraMonitor.js'
 
+// CAM API Direct integration
+import { stopLiveView } from './RESTApi/liveViewSocketStreamer.js'
+
 // Read env variables from the .env file
 import dotenv from 'dotenv'
 
@@ -68,6 +71,7 @@ export function serverReady () {
 // - 'this' = current socket
 function socketDisconnect (reason) {
   log.info(`[WS:${this.id}] disconnected because - ${reason}`)
+  stopLiveView()
 }
 
 // Log the ping from a client
