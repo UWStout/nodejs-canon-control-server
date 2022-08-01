@@ -52,7 +52,7 @@ function startLiveView (mySocket) {
     () => {
       try {
         const imageData = currentCamera.downloadLiveViewImage()
-        mySocket.emit('LiveViewImage', { currentCameraIndex, imageData })
+        mySocket.volatile.emit('LiveViewImage', { currentCameraIndex, imageData })
       } catch (e) {
         if (!e.message.includes('OBJECT_NOTREADY')) {
           log.error('LiveView image download error:', e.message)
