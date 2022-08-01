@@ -8,7 +8,7 @@ import camAPI from '@dimensional/napi-canon-cameras'
 import { setupEventMonitoring } from '../camSDK/SDKEventHelper.js'
 import { getCameraSummaryList, portList, SNList } from '../camSDK/SDKCameraHelper.js'
 import { getCameraNicknames, getDownloadPath, getExposureInfo } from '../util/fileHelper.js'
-import { startLiveView, stopLiveView } from './liveViewSocketStreamer.js'
+import { setLiveViewCamera, stopLiveView } from './liveViewSocketStreamer.js'
 
 // Setup logging and environment variables
 import { makeLogger } from '../util/logging.js'
@@ -164,8 +164,8 @@ export function setupSocketClient (clientSocket) {
   })
 
   // Live View Messages
-  clientSocket.on('startLiveView', cameraIndex => {
-    startLiveView(cameraIndex, lastServerSocket, clientSocket)
+  clientSocket.on('setLiveViewCamera', cameraIndex => {
+    setLiveViewCamera(cameraIndex, lastServerSocket, clientSocket)
   })
 
   clientSocket.on('stopLiveView', () => {

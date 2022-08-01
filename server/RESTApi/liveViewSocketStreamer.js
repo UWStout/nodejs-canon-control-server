@@ -7,11 +7,26 @@ const log = makeLogger('server', 'lvSocket')
 // How frequently to check for Live View images (defaults to approx. 24fps)
 const IMAGE_INTERVAL_TIME = 5
 
-// Reference to the currently active live view camera (if any)
+// Time to wait when stopping a live view
+const WAIT_FOR_STOP = 1000
+
+// Current live view state
+let currentCameraIndex = -1
 let currentCamera = null
 let intervalCallback = null
 
-export async function startLiveView (cameraIndex, mySocket, clientSocket) {
+export async function setLiveViewCamera (cameraIndex, mySocket, clientSocket) {
+  // Is this a change of state at all?
+  if (cameraIndex === currentCameraIndex) {
+    return
+  } else {
+    // Stop any active live view before continuing
+    if (currentCameraIndex >= 0) {
+      stopLiveView()
+      await new Promise(resolve => setInterval(() => resolve(), WAIT_FOR_STOP))
+    }
+  }
+
   // Attempt to find and connect to camera
   const camera = camAPI.cameraBrowser.getCamera(cameraIndex)
   if (!camera) { throw new Error('Camera not found') }
@@ -22,17 +37,22 @@ export async function startLiveView (cameraIndex, mySocket, clientSocket) {
     throw new Error('Live View not Available')
   }
 
-  // Setup current camera ref and start live view
   currentCamera = camera
-  log.info(`Starting live view for ${cameraIndex}`)
-  camera.startLiveView()
+  currentCameraIndex = cameraIndex
+  startLiveView(mySocket)
+}
+
+function startLiveView (mySocket) {
+  // Setup current camera ref and start live view
+  log.info(`Starting live view for ${currentCameraIndex}`)
+  currentCamera.startLiveView()
 
   // Read and pass the JPEGS along
   intervalCallback = setInterval(
     () => {
       try {
-        const imageData = camera.downloadLiveViewImage()
-        mySocket.emit('LiveViewImage', { cameraIndex, imageData })
+        const imageData = currentCamera.downloadLiveViewImage()
+        mySocket.emit('LiveViewImage', { currentCameraIndex, imageData })
       } catch (e) {
         if (!e.message.includes('OBJECT_NOTREADY')) {
           log.error('LiveView image download error:', e.message)
@@ -44,6 +64,8 @@ export async function startLiveView (cameraIndex, mySocket, clientSocket) {
 }
 
 export async function stopLiveView () {
+  log.info('Stopping live view')
+
   // Stop the image pump
   if (intervalCallback !== null) {
     clearInterval(intervalCallback)
@@ -55,4 +77,7 @@ export async function stopLiveView () {
     currentCamera.stopLiveView()
     currentCamera = null
   }
+
+  // Clear the index
+  currentCameraIndex = -1
 }
