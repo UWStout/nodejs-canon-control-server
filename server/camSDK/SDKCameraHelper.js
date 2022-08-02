@@ -5,11 +5,25 @@ import { createBulkTask } from '../RESTApi/bulkTaskManager.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
+import { prepareToReceiveExposureInfo } from '../RESTApi/cameraMonitor.js'
 const log = makeLogger('server', 'APIDevice')
 
 // Queue a function to run as soon as it can AFTER the current event loop
 function runSoon (callback) {
   setTimeout(callback, 0)
+}
+
+// Remove any extra categories from a SDK propety
+export function trimProp (propertyValue) {
+  if (typeof propertyValue !== 'string') {
+    return propertyValue
+  }
+
+  const index = propertyValue.lastIndexOf('.')
+  if (index >= 0) {
+    return propertyValue.substring(index + 1)
+  }
+  return propertyValue
 }
 
 // Properties included for summary
@@ -72,18 +86,59 @@ function getCameraList (index) {
 }
 
 /**
+ * Read and return camera image propeties (will trigger a shutter release)
+ * @param {number} index The zero-based index of the camera to take a picture on
+ * @returns {Promise} Resolves to the exposure and image propeties from a test photo.
+ */
+export function determineImageProperties (index) {
+  return new Promise((resolve, reject) => {
+    try {
+      const cam = getCameraList(index)
+      if (cam) {
+        // Set to download to host
+        const oldProps = getProperties(cam, ['SaveTo', 'ImageQuality'])
+        setCameraPropertiesForOne(index, { ImageQuality: 'Small1JPEGNormal' })
+        setCameraPropertiesForOne(index, { SaveTo: 'Host' })
+        prepareToReceiveExposureInfo(exposureInfo => {
+          // Reset back to original value
+          setCameraPropertiesForOne(index, { ImageQuality: trimProp(oldProps.ImageQuality.label) })
+          setCameraPropertiesForOne(index, { SaveTo: trimProp(oldProps.SaveTo.label) })
+
+          // Return info
+          if (exposureInfo.error) {
+            return reject(new CameraAPIError(400, null, exposureInfo.message))
+          }
+          return resolve(exposureInfo)
+        })
+
+        // Take picture
+        cam.sendCommand(camAPI.Camera.Command.PressShutterButton, camAPI.Camera.PressShutterButton.CompletelyNonAF)
+        cam.sendCommand(camAPI.Camera.Command.PressShutterButton, camAPI.Camera.PressShutterButton.OFF)
+      } else {
+        return reject(new CameraAPIError(404, null, `Camera ${index} not found`))
+      }
+    } catch (e) {
+      if (e instanceof CameraAPIError) {
+        return reject(e)
+      } else if (e.message.includes('DEVICE_NOT_FOUND')) {
+        return reject(new CameraAPIError(404, null, `Camera ${index} not found`))
+      } else {
+        return reject(new CameraAPIError(500, null, `Failed to read image propeties for camera ${index}`, { cause: e }))
+      }
+    }
+  })
+}
+
+/**
  * Instruct a camera to take a picture (may trigger an image download if save-to is set to HOST)
  * @param {number} index The zero-based index of the camera to take a picture on
  * @returns {object} A summary of the results (succeeded, failed, and array of messages)
  */
 export function takePictureForOne (index) {
   try {
-    const camList = getCameraList(index)
-    if (camList.length > 0) {
-      const cam = camList[0]
-      cam.connect()
-      cam.takePicture()
-    }
+    const cam = getCameraList(index)
+    cam.connect()
+    cam.takePicture()
   } catch (e) {
     if (e instanceof CameraAPIError) {
       throw e

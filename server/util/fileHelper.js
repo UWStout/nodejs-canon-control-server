@@ -165,7 +165,7 @@ export function getImageInfo (fileBuffer) {
           exposureComp: data.exif.ExposureCompensation,
           width: data.exif.ExifImageWidth,
           height: data.exif.ExifImageHeight,
-          orientation: data.image.orientation
+          orientation: data.image.Orientation
         })
       })
     } catch (error) {

@@ -5,7 +5,8 @@ import {
   portList, SNList,
   getCameraSummaryList,
   getCameraInfo,
-  getCameraProperty
+  getCameraProperty,
+  determineImageProperties
 } from '../camSDK/SDKCameraHelper.js'
 
 import CameraAPIError from './CameraAPIError.js'
@@ -53,6 +54,16 @@ router.get('/:index', (req, res) => {
   try {
     const cameraDetails = getCameraInfo(parseInt(req.params.index), false)
     return res.json(cameraDetails)
+  } catch (e) {
+    CameraAPIError.respond(e, res, log)
+  }
+})
+
+router.get('/:index/imagePropeties', async (req, res) => {
+  log.info(`Reading image propeties for camera ${req.params.index}`)
+  try {
+    const imagePropeties = await determineImageProperties(parseInt(req.params.index))
+    res.json(imagePropeties)
   } catch (e) {
     CameraAPIError.respond(e, res, log)
   }

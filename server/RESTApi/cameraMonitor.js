@@ -29,6 +29,15 @@ let lastServerSocket = null
 // Start out disabled, needs to be enabled once
 let serverEnabled = false
 
+// Coordinate retrieving the exposure info
+let grabExposureInfo = false
+let exposureInfoCB = null
+
+export function prepareToReceiveExposureInfo (callback) {
+  grabExposureInfo = true
+  exposureInfoCB = callback
+}
+
 export function enableSocketServer (enable) {
   // Update enabled state
   serverEnabled = enable
@@ -63,44 +72,60 @@ export function setSocketServer (serverSocket) {
       // Switch on the type of event
       switch (eventName) {
         case camAPI.CameraBrowser.EventName.DownloadRequest:
-          log.info(`Download request: camera ${camIndex}, ${file?.name}`)
-          if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
-            // Prepare filename
-            const serial = SNList[camIndex]
-            const nickname = getCameraNicknames()[serial]
-            const camName = (nickname) || `SN_${serial}`
-            const imgName = `SUB_${HOST_NICKNAME}_${camName}${path.extname(file.name)?.toLowerCase() || '.jpg'}`
+          if (grabExposureInfo) {
+            grabExposureInfo = false
+            log.info(`Exposure Info request: camera ${camIndex}`)
+            if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
+              // Download image data
+              const imgData = file.downloadThumbnailToString()
+              const imgBuffer = Buffer.from(imgData, 'base64')
 
-            // Send start signal via sockets
-            try {
-              serverSocket
-                .to(['Download-*', `Download-${camIndex}`])
-                .emit('DownloadStart', { camIndex, filename: imgName })
-            } catch (error) {
-              log.error('Socket error (downloadStart):', error)
+              // Send all exposure info to callback
+              getImageInfo(imgBuffer).then(exposureInfoCB)
+            } else {
+              log.error('Must be a JPEG to read image info')
+              exposureInfoCB({ error: true, message: 'Must be a JPEG to read image info' })
             }
+          } else {
+            log.info(`Download request: camera ${camIndex}, ${file?.name}`)
+            if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
+              // Prepare filename
+              const serial = SNList[camIndex]
+              const nickname = getCameraNicknames()[serial]
+              const camName = (nickname) || `SN_${serial}`
+              const imgName = `SUB_${HOST_NICKNAME}_${camName}${path.extname(file.name)?.toLowerCase() || '.jpg'}`
 
-            // Download image data
-            const imgData = file.downloadThumbnailToString()
-            const imgBuffer = Buffer.from(imgData, 'base64')
-
-            // Save it to a file
-            fs.writeFileSync(
-              path.join(DOWNLOAD_DIR, getDownloadPath(), imgName),
-              imgBuffer,
-              { encoding: 'utf8' }
-            )
-
-            // Send completion signal with exposure info via sockets
-            getImageInfo(imgBuffer).then(exposureInfo => {
+              // Send start signal via sockets
               try {
                 serverSocket
                   .to(['Download-*', `Download-${camIndex}`])
-                  .emit('DownloadEnd', { camIndex, exposureInfo, filename: imgName })
+                  .emit('DownloadStart', { camIndex, filename: imgName })
               } catch (error) {
-                log.error('Socket error (downloadEnd):', error)
+                log.error('Socket error (downloadStart):', error)
               }
-            })
+
+              // Download image data
+              const imgData = file.downloadThumbnailToString()
+              const imgBuffer = Buffer.from(imgData, 'base64')
+
+              // Save it to a file
+              fs.writeFileSync(
+                path.join(DOWNLOAD_DIR, getDownloadPath(), imgName),
+                imgBuffer,
+                { encoding: 'utf8' }
+              )
+
+              // Send completion signal with exposure info via sockets
+              getImageInfo(imgBuffer).then(exposureInfo => {
+                try {
+                  serverSocket
+                    .to(['Download-*', `Download-${camIndex}`])
+                    .emit('DownloadEnd', { camIndex, exposureInfo, filename: imgName })
+                } catch (error) {
+                  log.error('Socket error (downloadEnd):', error)
+                }
+              })
+            }
           }
           break
 
