@@ -20,16 +20,23 @@ function createTaskId () {
 function summarizeResults (results) {
   return results.reduce((prev, result, i) => (
     result.status === 'fulfilled'
-      ? {
+    ? ( result.value.length === 0 )
+      ? 
+        {
           succeeded: prev.succeeded + 1,
           failed: prev.failed,
           messages: prev.messages
         }
       : {
-          succeeded: prev.succeeded,
-          failed: prev.failed + 1,
-          messages: [...prev.messages, `Camera ${i} on server ${HOST_NICKNAME}: ${result.reason.toString()}`]
+          succeeded: prev.succeeded + 1,
+          failed: prev.failed,
+          messages: [...prev.messages, `Camera ${i} on server ${HOST_NICKNAME}: Failed to set ${result.value}`]
         }
+    : {
+        succeeded: prev.succeeded,
+        failed: prev.failed + 1,
+        messages: [...prev.messages, `Camera ${i} on server ${HOST_NICKNAME}: ${result.reason.toString()}`]
+      }
   ), { succeeded: 0, failed: 0, messages: [] })
 }
 
