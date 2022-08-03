@@ -62,8 +62,8 @@ router.get('/:index', (req, res) => {
 router.get('/:index/imageProperties', async (req, res) => {
   log.info(`Reading image properties for camera ${req.params.index}`)
   try {
-    const imagePropeties = await determineImageProperties(parseInt(req.params.index))
-    res.json(imagePropeties)
+    const imageProperties = await determineImageProperties(parseInt(req.params.index))
+    res.json(imageProperties)
   } catch (e) {
     CameraAPIError.respond(e, res, log)
   }
