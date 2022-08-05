@@ -418,6 +418,7 @@ function compareProperties (cam, settingsObj) {
 
   compareKeys.forEach((key) => {
     if (settingsObj[key] !== trimProp(cameraProperties[key].label)) {
+      log.error(`Mismatch: ${settingsObj[key]} !== ${trimProp(cameraProperties[key].label)}`)
       nonMatches.push(key)
     }
   })
