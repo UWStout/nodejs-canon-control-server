@@ -404,6 +404,22 @@ export function setCameraPropertiesForOne (index, settingsObj) {
   }
 }
 
+function compareProperties (cam, settingsObj) {
+  cam.connect()
+  const compareKeys = Object.keys(settingsObj)
+  const cameraProperties = getProperties(cam, compareKeys)
+  const nonMatches = []
+  
+  compareKeys.forEach((key) => {
+    if (settingsObj[key] !== trimProp(cameraProperties[key].label))
+    {
+      nonMatches.push(key)
+    }
+  })
+
+  return nonMatches
+}
+
 export function setCameraPropertiesForAll (settingsObj, type = 'Bulk property change') {
   // Build properties object
   const newProperties = buildPropertiesObject(settingsObj)
@@ -416,8 +432,9 @@ export function setCameraPropertiesForAll (settingsObj, type = 'Bulk property ch
         try {
           cam.connect()
           cam.setProperties(newProperties)
+          const mismatchedProps = compareProperties(cam, settingsObj)
           // cam.disconnect()
-          return resolve()
+          return resolve(mismatchedProps)
         } catch (err) {
           return reject(err)
         }
