@@ -136,9 +136,53 @@ export function determineImageProperties (index) {
 }
 
 /**
+ * Try to reset the camera back to a clean state ready to take a picture.
+ * @param {number} index The zero-based index of the camera to take a picture on
+ */
+export function resetOne (index) {
+  try {
+    const cam = getCameraList(index)
+    cam.connect()
+    cam.stopLiveView()
+    cam.sendCommand(camAPI.Camera.Command.PressShutterButton, camAPI.Camera.PressShutterButton.OFF)
+  } catch (e) {
+    if (e instanceof CameraAPIError) {
+      throw e
+    } else if (e.message.includes('DEVICE_NOT_FOUND')) {
+      throw new CameraAPIError(404, null, `Camera ${index} not found`)
+    } else {
+      throw new CameraAPIError(500, null, `Failed to reset camera ${index}`, { cause: e })
+    }
+  }
+}
+
+/**
+ * Try to reset all the cameras back to a clean state ready to take a picture.
+ * @returns {string} The ID of the associated bulk task which will complete asynchronously
+ */
+export function resetAll () {
+  const camList = getCameraList('*')
+  const resultsPromise = Promise.allSettled(camList.map(cam => {
+    return new Promise((resolve, reject) => {
+      runSoon(() => {
+        try {
+          cam.connect()
+          cam.stopLiveView()
+          cam.sendCommand(camAPI.Camera.Command.PressShutterButton, camAPI.Camera.PressShutterButton.OFF)
+          return resolve()
+        } catch (err) {
+          return reject(err)
+        }
+      })
+    })
+  }))
+
+  return createBulkTask(resultsPromise, 'Reset')
+}
+
+/**
  * Instruct a camera to take a picture (may trigger an image download if save-to is set to HOST)
  * @param {number} index The zero-based index of the camera to take a picture on
- * @returns {object} A summary of the results (succeeded, failed, and array of messages)
  */
 export function takePictureForOne (index) {
   try {

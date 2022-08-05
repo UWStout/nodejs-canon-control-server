@@ -9,7 +9,9 @@ import {
   takePictureForOne,
   takePictureForAll,
   pressShutterButtonForOne,
-  pressShutterButtonForAll
+  pressShutterButtonForAll,
+  resetOne,
+  resetAll
   // computeTZValue
 } from '../camSDK/SDKCameraHelper.js'
 
@@ -40,6 +42,21 @@ function validateIndex (req, message = 'Writing') {
 }
 
 // ******* API Camera Writing routes **************
+router.post('/:index/reset', (req, res) => {
+  try {
+    const index = validateIndex(req, 'Resetting')
+    if (isNaN(index)) {
+      const taskId = resetAll()
+      return res.status(202).send({ status: 'STARTED', taskId })
+    } else {
+      const result = resetOne(index)
+      return res.send({ status: 'OK', result })
+    }
+  } catch (err) {
+    return CameraAPIError.respond(err, res, log, { index: req.params.index })
+  }
+})
+
 router.post('/:index/trigger', (req, res) => {
   try {
     const index = validateIndex(req, 'Taking picture')
