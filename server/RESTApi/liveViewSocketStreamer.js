@@ -45,7 +45,21 @@ export async function setLiveViewCamera (cameraIndex, mySocket, clientSocket) {
 function startLiveView (mySocket) {
   // Setup current camera ref and start live view
   log.info(`Starting live view for ${currentCameraIndex}`)
-  currentCamera.startLiveView()
+  try {
+    currentCamera.startLiveView()
+  } catch (err) {
+    log.error('Live view failed to start')
+    log.error(err)
+    mySocket.emit('LiveViewError', {
+      message: `Failed to start live view on ${currentCameraIndex}`,
+      error: err
+    })
+
+    // Clear live view state
+    currentCamera = null
+    stopLiveView()
+    return
+  }
 
   // Read and pass the JPEGS along
   intervalCallback = setInterval(
