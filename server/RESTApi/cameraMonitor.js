@@ -90,7 +90,7 @@ export function setSocketServer (serverSocket) {
             log.info(`Download request: camera ${camIndex}, ${file?.name}`)
             if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
               // Prepare filename
-              const camName = getCameraNickname()
+              const camName = getCameraNickname(camIndex)
               const imgName = `SUB_${HOST_NICKNAME}_${camName}${path.extname(file.name)?.toLowerCase() || '.jpg'}`
 
               // Send start signal via sockets
