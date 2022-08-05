@@ -2,10 +2,11 @@ import camAPI from '@dimensional/napi-canon-cameras'
 import CameraAPIError from '../RESTApi/CameraAPIError.js'
 
 import { createBulkTask } from '../RESTApi/bulkTaskManager.js'
+import { prepareToReceiveExposureInfo } from '../RESTApi/cameraMonitor.js'
+import { getCameraNicknames } from '../util/fileHelper.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
-import { prepareToReceiveExposureInfo } from '../RESTApi/cameraMonitor.js'
 const log = makeLogger('server', 'APIDevice')
 
 // Queue a function to run as soon as it can AFTER the current event loop
@@ -75,6 +76,11 @@ const FULL_PROPS = [
 // Some camera lookup tables
 export let SNList = []
 export let portList = []
+
+export function getCameraNickname (camIndex) {
+  const serial = SNList[camIndex]
+  return (getCameraNicknames()[serial] || `SN_${serial}`)
+}
 
 function getCameraList (index) {
   // Build list of cameras

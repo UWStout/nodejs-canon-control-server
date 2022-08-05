@@ -1,4 +1,5 @@
 import { getMySocket } from '../sockets.js'
+import { getCameraNickname } from '../camSDK/SDKCameraHelper.js'
 
 import dotenv from 'dotenv'
 
@@ -25,7 +26,7 @@ function summarizeResults (results) {
         return {
           succeeded: prev.succeeded,
           failed: prev.failed + 1,
-          messages: [...prev.messages, `Camera ${i} on server ${HOST_NICKNAME}: ${result.value.message}`]
+          messages: [...prev.messages, `Camera ${getCameraNickname(i)} on server ${HOST_NICKNAME}: ${result.value.message}`]
         }
       }
 
@@ -40,7 +41,7 @@ function summarizeResults (results) {
       return {
         succeeded: prev.succeeded,
         failed: prev.failed + 1,
-        messages: [...prev.messages, `Camera ${i} on server ${HOST_NICKNAME}: ${result.reason.toString()}`]
+        messages: [...prev.messages, `Camera ${getCameraNickname(i)} on server ${HOST_NICKNAME}: ${result.reason.toString()}`]
       }
     }
   }, { succeeded: 0, failed: 0, messages: [] })
