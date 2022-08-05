@@ -13,7 +13,7 @@ function runSoon (callback) {
   setTimeout(callback, 0)
 }
 
-// Remove any extra categories from a SDK propety
+// Remove any extra categories from a SDK property
 export function trimProp (propertyValue) {
   if (typeof propertyValue !== 'string') {
     return propertyValue
@@ -86,9 +86,9 @@ function getCameraList (index) {
 }
 
 /**
- * Read and return camera image propeties (will trigger a shutter release)
+ * Read and return camera image properties (will trigger a shutter release)
  * @param {number} index The zero-based index of the camera to take a picture on
- * @returns {Promise} Resolves to the exposure and image propeties from a test photo.
+ * @returns {Promise} Resolves to the exposure and image properties from a test photo.
  */
 export function determineImageProperties (index) {
   return new Promise((resolve, reject) => {
@@ -409,10 +409,9 @@ function compareProperties (cam, settingsObj) {
   const compareKeys = Object.keys(settingsObj)
   const cameraProperties = getProperties(cam, compareKeys)
   const nonMatches = []
-  
+
   compareKeys.forEach((key) => {
-    if (settingsObj[key] !== trimProp(cameraProperties[key].label))
-    {
+    if (settingsObj[key] !== trimProp(cameraProperties[key].label)) {
       nonMatches.push(key)
     }
   })
@@ -434,7 +433,13 @@ export function setCameraPropertiesForAll (settingsObj, type = 'Bulk property ch
           cam.setProperties(newProperties)
           const mismatchedProps = compareProperties(cam, settingsObj)
           // cam.disconnect()
-          return resolve(mismatchedProps)
+          if (mismatchedProps.length > 0) {
+            return resolve({
+              error: true,
+              message: `Properties failed to set: ${mismatchedProps.toString()}`
+            })
+          }
+          return resolve()
         } catch (err) {
           return reject(err)
         }

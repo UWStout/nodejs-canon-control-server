@@ -18,26 +18,32 @@ function createTaskId () {
 
 // Summarize a set of results from a Promise.allSettled call
 function summarizeResults (results) {
-  return results.reduce((prev, result, i) => (
-    result.status === 'fulfilled'
-    ? ( result.value.length === 0 )
-      ? 
-        {
-          succeeded: prev.succeeded + 1,
-          failed: prev.failed,
-          messages: prev.messages
+  return results.reduce((prev, result, i) => {
+    if (result.status === 'fulfilled') {
+      // Check for partial error
+      if (result.value?.error) {
+        return {
+          succeeded: prev.succeeded,
+          failed: prev.failed + 1,
+          messages: [...prev.messages, `Camera ${i} on server ${HOST_NICKNAME}: ${result.value.message}`]
         }
-      : {
-          succeeded: prev.succeeded + 1,
-          failed: prev.failed,
-          messages: [...prev.messages, `Camera ${i} on server ${HOST_NICKNAME}: Failed to set ${result.value}`]
-        }
-    : {
+      }
+
+      // Indicate full success
+      return {
+        succeeded: prev.succeeded + 1,
+        failed: prev.failed,
+        messages: prev.messages
+      }
+    } else {
+      // Indicate rejection reason
+      return {
         succeeded: prev.succeeded,
         failed: prev.failed + 1,
         messages: [...prev.messages, `Camera ${i} on server ${HOST_NICKNAME}: ${result.reason.toString()}`]
       }
-  ), { succeeded: 0, failed: 0, messages: [] })
+    }
+  }, { succeeded: 0, failed: 0, messages: [] })
 }
 
 export function createBulkTask (taskPromise, type) {
