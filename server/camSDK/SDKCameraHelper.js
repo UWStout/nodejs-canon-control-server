@@ -51,7 +51,7 @@ const FULL_PROPS = [
   'WhiteBalanceShift',
   'ColorSpace',
   'PictureStyle',
-  'PictureStyleDesc',
+  // 'PictureStyleDesc', (always fails)
 
   // Capture Properties
   'AEMode',
@@ -409,7 +409,7 @@ function compareProperties (cam, settingsObj) {
   const compareKeys = Object.keys(settingsObj)
   const cameraProperties = getProperties(cam, compareKeys)
   const nonMatches = []
-  
+
   compareKeys.forEach((key) => {
     if (settingsObj[key] !== trimProp(cameraProperties[key].label))
     {
