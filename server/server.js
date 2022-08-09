@@ -13,6 +13,7 @@ import camReadRouter from './RESTApi/cameraReader.js'
 import camWriteRouter from './RESTApi/cameraWriter.js'
 import serverReadRouter from './RESTApi/serverReader.js'
 import serverWriteRouter from './RESTApi/serverWriter.js'
+import triggerBoxRouter from './RESTApi/triggerRouter.js'
 
 import { makeSocket, serverReady } from './sockets.js'
 
@@ -67,6 +68,9 @@ app.use('/camera', camWriteRouter)
 // Attach server data 'routes' under '/server'
 app.use('/server', serverReadRouter)
 app.use('/server', serverWriteRouter)
+
+// Attach all trigger box 'routes' under '/trigger'
+app.use('/trigger', triggerBoxRouter)
 
 // Statically serve files from 'public'
 app.use(Express.static('public'))
