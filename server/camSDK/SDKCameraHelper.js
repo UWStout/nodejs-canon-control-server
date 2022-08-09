@@ -283,7 +283,15 @@ export function getCameraSummaryList () {
   const camList = camAPI.cameraBrowser.getCameras()
 
   // Convert each camera to just its basic summary info
-  const cameras = camList.map((_, i) => getCameraInfo(i))
+  const cameras = camList.map((_, i) => {
+    try {
+      const info = getCameraInfo(i)
+      return info
+    } catch (error) {
+      log.error(`Error getting camera info: ${error.message}`)
+      return null
+    }
+  }).filter(info => info !== null)
 
   // Refresh lookup lists and return camera list
   SNList = cameras.map(cam => cam.BodyIDEx.value)
