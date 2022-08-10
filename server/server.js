@@ -20,6 +20,7 @@ import { makeSocket, serverReady } from './sockets.js'
 // Read extra environment variables from the .env file
 import dotenv from 'dotenv'
 import { makeLogger } from './util/logging.js'
+import { setupNAS } from './util/mountNAS.js'
 
 // Update environment variables
 dotenv.config()
@@ -48,6 +49,11 @@ const SSLOptions = {
   key: fs.readFileSync(SSL_KEY_FILE),
   cert: fs.readFileSync(SSL_CERT_FILE)
 }
+
+// Handle NAS Mounting
+setupNAS()
+  .then(() => log.info('NAS Ready'))
+  .catch(error => log.error('NAS mounting failed: ', error.message))
 
 // Make an HTTPS express server app
 const server = https.createServer(SSLOptions, app)
