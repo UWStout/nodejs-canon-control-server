@@ -5,6 +5,7 @@
   "main": "server/server.js",
   "type": "module",
   "scripts": {
+    "start": "pm2 start ./server/server.js --restart-delay 2000 --name PARSEC-server",
     "server": "node server/server.js",
     "server:dev": "nodemon --watch server server/server.js dev",
     "test": "echo \"Error: no test specified\" && exit 1"
