@@ -2,7 +2,8 @@
 import * as io from 'socket.io'
 
 // Web socket message handler
-import { enableSocketServer, setSocketServer, setupSocketClient } from './RESTApi/cameraMonitor.js'
+import { enableSocketServer, setSocketServer as setSocketServerCamera, setupSocketClient } from './RESTApi/cameraMonitor.js'
+import { setSocketServer as setSocketServerTrigger } from './esperSDK/triggerBoxSDK.js'
 
 // CAM API Direct integration
 import { stopLiveView } from './RESTApi/liveViewSocketStreamer.js'
@@ -32,7 +33,9 @@ export function makeSocket (serverListener) {
     path: '/socket.io',
     cors: { origin: true }
   })
-  setSocketServer(mySocket)
+
+  setSocketServerCamera(mySocket)
+  setSocketServerTrigger(mySocket)
 
   // Respond to new socket connections
   mySocket.on('connection', (socket) => {
