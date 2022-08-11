@@ -11,7 +11,7 @@ module.exports = {
       args: 'dev',
       watch: ['server'],
       watch_delay: 2000,
-      ignore_watch : ['node_modules']
+      ignore_watch: ['node_modules']
     }
   }]
 }
