@@ -28,6 +28,9 @@ export async function setupNAS () {
     if (!fs.existsSync(`${NAS_DRIVE_LETTER}:`)) {
       log.info('NAS not mounted, attempting to mount')
 
+      // Run net delete command first (in case we have a lingering map)
+      childProcess.spawnSync('net', ['use', `${NAS_DRIVE_LETTER}:`, '/delete'], { encoding: 'utf8' })
+
       // Run net use command
       const args = [
         'use',
