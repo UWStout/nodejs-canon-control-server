@@ -161,15 +161,15 @@ export function setSocketServer (serverSocket) {
           break
 
         case camAPI.CameraBrowser.EventName.CameraAdd:
-        case camAPI.CameraBrowser.EventName.CameraRemove: {
+        case camAPI.CameraBrowser.EventName.CameraRemove:
           log.info('Relaying updated camera list')
-          const camList = getCameraSummaryList()
           try {
+            const camList = getCameraSummaryList()
             serverSocket.to('CameraList').emit('CameraListUpdate', camList)
           } catch (error) {
-            log.error('Socket error (cameraList):', error)
+            log.error('Camera list relay error:', error)
           }
-        } break
+          break
       }
     }, 500, log)
   }

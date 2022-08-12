@@ -5,6 +5,9 @@
   "main": "server/server.js",
   "type": "module",
   "scripts": {
+    "monit": "pm2 start ecosystem.config.cjs --env production",
+    "monit:dev": "pm2 start ecosystem.config.cjs --env development",
+    "unmonit": "pm2 delete ecosystem.config.cjs",
     "server": "node server/server.js",
     "server:dev": "nodemon --watch server server/server.js dev",
     "test": "echo \"Error: no test specified\" && exit 1"
