@@ -2,6 +2,7 @@
 import Express from 'express'
 
 import { ensureFolderExists, setDownloadPath, updateCameraNicknames } from '../util/fileHelper.js'
+import { setLiveViewTimeout } from './liveViewSocketStreamer.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
@@ -118,6 +119,18 @@ router.post('/nicknames', (req, res) => {
   const newNicknames = req.body
   updateCameraNicknames(newNicknames)
   res.send('OK')
+})
+
+router.post('/liveview/timeout/:value', (req, res) => {
+  try {
+    const newTimeout = req.params.value
+    setLiveViewTimeout(newTimeout)
+    res.send('OK')
+  } catch (err) {
+    CameraAPIError.respond(err, res, log, {
+      newTimeout
+    })
+  }
 })
 
 export default router

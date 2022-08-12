@@ -14,6 +14,9 @@ const WAIT_FOR_STOP = 1000
 let currentCameraIndex = -1
 let currentCamera = null
 let intervalCallback = null
+let countdownCallback = null
+let timeoutDelay = 60000
+let timeoutCountdown = 0
 
 export async function setLiveViewCamera (cameraIndex, mySocket, clientSocket) {
   // Is this a change of state at all?
@@ -47,6 +50,7 @@ function startLiveView (mySocket) {
   log.info(`Starting live view for ${currentCameraIndex}`)
   try {
     currentCamera.startLiveView()
+    timeoutCountdown = timeoutDelay
   } catch (err) {
     log.error('Live view failed to start')
     log.error(err)
@@ -60,6 +64,23 @@ function startLiveView (mySocket) {
     stopLiveView()
     return
   }
+
+  // Setup countdown to timeout live view 
+  countdownCallback = setInterval(() => {
+      // Tick counter down
+      timeoutCountdown = timeoutCountdown - 1000
+      // Stop live view and emit timeout signal if timeoutCountdown is below 0 and timeoutDelay is greater than 0
+      // timeoutDelay of 0 indicates 'Never'
+      if (timeoutCountdown < 0 && timeoutDelay > 0) {
+        mySocket.emit('LiveViewTimeout', {
+          message: `Live View Timed Out`,
+          timeoutDelay
+        })
+        stopLiveView()
+      }
+    },
+    1000
+  )
 
   // Read and pass the JPEGS along
   intervalCallback = setInterval(
@@ -86,6 +107,12 @@ export async function stopLiveView () {
     intervalCallback = null
   }
 
+  // Clear timeout countdown
+  if (countdownCallback !== null) {
+    clearInterval(countdownCallback)
+    countdownCallback = null
+  }
+
   // Stop live view
   if (currentCamera) {
     currentCamera.stopLiveView()
@@ -94,4 +121,15 @@ export async function stopLiveView () {
 
   // Clear the index
   currentCameraIndex = -1
+}
+
+// Return the current live view timeout
+export function getLiveViewTimeout() {
+  return timeoutDelay
+}
+
+// Change the live view timeout and reset the countdown
+export function setLiveViewTimeout(timeout) {
+  timeoutDelay = timeout
+  timeoutCountdown = timeout
 }

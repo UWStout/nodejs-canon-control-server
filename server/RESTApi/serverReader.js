@@ -2,6 +2,7 @@
 import Express from 'express'
 
 import { getDownloadPath, getSessions } from '../util/fileHelper.js'
+import { getLiveViewTimeout } from './liveViewSocketStreamer.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
@@ -28,6 +29,16 @@ router.get('/sessions', async (req, res) => {
     return res.send(result)
   } catch (error) {
     return res.status(500).send({ error: true, message: error.message })
+  }
+})
+
+router.get('/liveview/timeout', (req, res) => {
+  try {
+    const timeout = getLiveViewTimeout()
+    log.info(`Retrieved Timeout: ${timeout}`)
+    return res.send({timeout})
+  } catch (err) {
+    return res.status(500).send({ error: true })
   }
 })
 
