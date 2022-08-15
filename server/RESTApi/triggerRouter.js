@@ -1,11 +1,12 @@
 // Basic HTTP routing library
 import Express from 'express'
 
+// Special Error handling object
 import CameraAPIError from './CameraAPIError.js'
 
 // Setup logging
 import { makeLogger } from '../util/logging.js'
-import { listPossibleBoxes, releaseShutter } from '../esperSDK/triggerBoxSDK.js'
+import { listPossibleBoxes, takePhoto, primeTrigger, fireTrigger, unPrimeTrigger } from '../esperSDK/triggerBoxSDK.js'
 const log = makeLogger('server', 'trigger')
 
 // Create a router to attach to an express server app
@@ -22,13 +23,65 @@ router.get('/', async (req, res) => {
   }
 })
 
-router.post('/:index/release', async (req, res) => {
+router.post('/:index/prime', async (req, res) => {
   if (isNaN(parseInt(req.params.index))) {
-    return res.status(400).json({ error: true, message: 'Bag trigger box index' })
+    return res.status(400).json({ error: true, message: 'Bad trigger box index' })
   }
 
   try {
-    await releaseShutter(parseInt(req.params.index))
+    await primeTrigger(parseInt(req.params.index))
+    return res.json({ success: true })
+  } catch (e) {
+    CameraAPIError.respond(e, res, log)
+  }
+})
+
+router.post('/:index/fire', async (req, res) => {
+  if (isNaN(parseInt(req.params.index))) {
+    return res.status(400).json({ error: true, message: 'Bad trigger box index' })
+  }
+
+  try {
+    await fireTrigger()
+    return res.json({ success: true })
+  } catch (e) {
+    CameraAPIError.respond(e, res, log)
+  }
+})
+
+router.post('/:index/unprime', async (req, res) => {
+  if (isNaN(parseInt(req.params.index))) {
+    return res.status(400).json({ error: true, message: 'Bad trigger box index' })
+  }
+
+  try {
+    await unPrimeTrigger()
+    return res.json({ success: true })
+  } catch (e) {
+    CameraAPIError.respond(e, res, log)
+  }
+})
+
+router.post('/:index/focus', async (req, res) => {
+  if (isNaN(parseInt(req.params.index))) {
+    return res.status(400).json({ error: true, message: 'Bad trigger box index' })
+  }
+
+  try {
+    await takePhoto(parseInt(req.params.index), true)
+    return res.json({ success: true })
+  } catch (e) {
+    CameraAPIError.respond(e, res, log)
+  }
+})
+
+router.post('/:index/takePhoto', async (req, res) => {
+  if (isNaN(parseInt(req.params.index))) {
+    return res.status(400).json({ error: true, message: 'Bad trigger box index' })
+  }
+
+  try {
+    await takePhoto(parseInt(req.params.index))
     return res.json({ success: true })
   } catch (e) {
     CameraAPIError.respond(e, res, log)

@@ -128,11 +128,11 @@ export function setSocketServer (serverSocket) {
           break
 
         case camAPI.CameraBrowser.EventName.StateChange:
-          log.verbose(`State change: camera ${camIndex} ${stateEvent.toString()}`)
+          log.verbose(`State change: camera ${camIndex} ${JSON.stringify(stateEvent.toJSON())}`)
           try {
             serverSocket
               .to(['CameraState-*', `CameraState-${camIndex}`])
-              .emit('CameraState', stateEvent.toString())
+              .emit('CameraState', { camIndex, camNickname: getCameraNickname(camIndex), ...stateEvent.toJSON() })
           } catch (error) {
             log.error('Socket error (cameraState):', error)
           }
