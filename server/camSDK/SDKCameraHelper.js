@@ -357,6 +357,19 @@ function getProperties (cam, propList) {
           label: prop.value?.label,
           value: prop.value?.value === undefined ? prop.value : prop.value.value
         }
+
+        // Detect time values
+        if ((props[key].label === null || props[key].label === undefined) &&
+            typeof props[key].value?.year === 'number') {
+          props[key].label = new Date(Date.UTC(
+            props[key].value.year,
+            props[key].value.month - 1,
+            props[key].value.day,
+            props[key].value.hour,
+            props[key].value.minute,
+            props[key].value.second
+          ))
+        }
       } else {
         log.error(`Property not available: ${key}`)
       }
@@ -469,9 +482,17 @@ function compareProperties (cam, settingsObj) {
   const nonMatches = []
 
   compareKeys.forEach((key) => {
-    if (settingsObj[key] !== trimProp(cameraProperties[key].label)) {
-      log.error(`Mismatch: ${settingsObj[key]} !== ${trimProp(cameraProperties[key].label)}`)
-      nonMatches.push(key)
+    if (cameraProperties[key].label instanceof Date) {
+      const timeNoMS = settingsObj[key].getTime() - settingsObj[key].getUTCMilliseconds()
+      if (timeNoMS !== cameraProperties[key].label.getTime()) {
+        log.error(`Date/Time Mismatch: ${timeNoMS} !== ${cameraProperties[key].label.getTime()}`)
+        nonMatches.push(key)
+      }
+    } else {
+      if (settingsObj[key] !== trimProp(cameraProperties[key].label)) {
+        log.error(`Mismatch: ${settingsObj[key]} !== ${trimProp(cameraProperties[key].label)}`)
+        nonMatches.push(key)
+      }
     }
   })
 
@@ -491,7 +512,6 @@ export function setCameraPropertiesForAll (settingsObj, type = 'Bulk property ch
           cam.connect()
           cam.setProperties(newProperties)
           const mismatchedProps = compareProperties(cam, settingsObj)
-          // cam.disconnect()
           if (mismatchedProps.length > 0) {
             return resolve({
               error: true,
