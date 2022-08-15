@@ -36,11 +36,7 @@ router.post('/:index/prime', async (req, res) => {
   }
 })
 
-router.post('/:index/fire', async (req, res) => {
-  if (isNaN(parseInt(req.params.index))) {
-    return res.status(400).json({ error: true, message: 'Bad trigger box index' })
-  }
-
+router.post('/fire', async (req, res) => {
   try {
     await fireTrigger()
     return res.json({ success: true })
@@ -49,11 +45,7 @@ router.post('/:index/fire', async (req, res) => {
   }
 })
 
-router.post('/:index/unprime', async (req, res) => {
-  if (isNaN(parseInt(req.params.index))) {
-    return res.status(400).json({ error: true, message: 'Bad trigger box index' })
-  }
-
+router.post('/flush', async (req, res) => {
   try {
     await unPrimeTrigger()
     return res.json({ success: true })
@@ -69,7 +61,7 @@ router.post('/:index/focus', async (req, res) => {
 
   try {
     await takePhoto(parseInt(req.params.index), true)
-    return res.json({ success: true })
+    return res.status(202).json({ success: true })
   } catch (e) {
     CameraAPIError.respond(e, res, log)
   }
@@ -82,7 +74,7 @@ router.post('/:index/takePhoto', async (req, res) => {
 
   try {
     await takePhoto(parseInt(req.params.index))
-    return res.json({ success: true })
+    return res.status(202).json({ success: true })
   } catch (e) {
     CameraAPIError.respond(e, res, log)
   }

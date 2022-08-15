@@ -42,7 +42,7 @@ let primedTriggerBox = null
 export async function primeTrigger (index) {
   let PORT_PATH = ''
 
-  sendSocketMessage(index, 'release:starting')
+  sendSocketMessage(index, 'prime:starting')
   try {
     const boxes = await ESPER.listPossibleTriggerBoxes()
     if (!Array.isArray(boxes) || boxes.length <= index) {
@@ -55,7 +55,7 @@ export async function primeTrigger (index) {
   }
 
   try {
-    sendSocketMessage(index, 'release:connecting')
+    sendSocketMessage(index, 'prime:connecting')
     const triggerBox = new ESPER.TriggerBox(PORT_PATH)
     triggerBox.on('ready', async () => {
       // Print connection string
@@ -66,7 +66,7 @@ export async function primeTrigger (index) {
 
       try {
         // Pause a bit before sending commands
-        sendSocketMessage(index, 'release:configuring')
+        sendSocketMessage(index, 'prime:configuring')
         await ESPER.waitForMilliseconds(1000)
 
         // Enable link
@@ -74,15 +74,23 @@ export async function primeTrigger (index) {
         await triggerBox.enableLink(true)
 
         // Focus and fire
-        sendSocketMessage(index, 'release:focusing')
+        sendSocketMessage(index, 'prime:focusing')
         log.info(`[${PORT_PATH}] Starting focus ...`)
         await primedTriggerBox.startFocus(2000)
+
+        log.info(`[${PORT_PATH}] Primed and Ready`)
+        sendSocketMessage(index, 'prime:complete')
       } catch (error) {
 
       }
     })
   } catch (error) {
+    primedTriggerBox.close()
+    primedTriggerBox = null
 
+    sendSocketMessage(primedIndex, 'prime:error')
+    log.error('Box priming failed:', error.message)
+    throw new CameraAPIError(500, null, 'Box prime failed', { cause: error })
   }
 }
 
@@ -92,16 +100,18 @@ export async function fireTrigger () {
   }
 
   try {
-    sendSocketMessage(primedIndex, 'release:firing')
+    sendSocketMessage(primedIndex, 'fire:firing')
     log.info(`[${primedPortPath}] Releasing shutter ...`)
     await primedTriggerBox.releaseShutter()
+
+    sendSocketMessage(primedIndex, 'fire:complete')
   } catch (error) {
     primedTriggerBox.close()
     primedTriggerBox = null
 
-    sendSocketMessage(primedIndex, 'release:error')
-    log.error('Box command failed:')
-    throw new CameraAPIError(500, null, 'Box command failed', { cause: error })
+    sendSocketMessage(primedIndex, 'fire:error')
+    log.error('Box fire failed:', error.message)
+    throw new CameraAPIError(500, null, 'Box fire failed', { cause: error })
   }
 }
 
@@ -111,7 +121,7 @@ export async function unPrimeTrigger () {
   }
 
   try {
-    sendSocketMessage(primedIndex, 'release:cleanup')
+    sendSocketMessage(primedIndex, 'flush:cleanup')
     log.info(`[${primedPortPath}] Releasing focus ...`)
     await primedTriggerBox.stopFocus()
 
@@ -120,14 +130,14 @@ export async function unPrimeTrigger () {
     await primedTriggerBox.close()
 
     primedTriggerBox = null
-    sendSocketMessage(primedIndex, 'release:complete')
+    sendSocketMessage(primedIndex, 'flush:complete')
   } catch (error) {
     primedTriggerBox.close()
     primedTriggerBox = null
 
-    sendSocketMessage(primedIndex, 'release:error')
-    log.error('Box command failed:')
-    throw new CameraAPIError(500, null, 'Box command failed', { cause: error })
+    sendSocketMessage(primedIndex, 'flush:error')
+    log.error('Box flush failed:', error.message)
+    throw new CameraAPIError(500, null, 'Box flush failed', { cause: error })
   }
 }
 
