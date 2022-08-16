@@ -88,10 +88,11 @@ export function setSocketServer (serverSocket) {
             }
           } else {
             log.info(`Download request: camera ${camIndex}, ${file?.name}`)
-            if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
+              if (file?.format.value === camAPI.FileFormat.ID.JPEG || file?.format.value === camAPI.FileFormat.ID.CR2) { // JPEG files
               // Prepare filename
               const camName = getCameraNickname(camIndex)
-              const imgName = `SUB_${HOST_NICKNAME}_${camName}${path.extname(file.name)?.toLowerCase() || '.jpg'}`
+              const fileExt = (file?.format.value === camAPI.FileFormat.ID.JPEG) ? '.jpg' : '.cr2'
+              const imgName = `SUB_${HOST_NICKNAME}_${camName}${path.extname(file.name)?.toLowerCase() || fileExt}`
 
               // Send start signal via sockets
               try {
@@ -112,17 +113,20 @@ export function setSocketServer (serverSocket) {
                 imgBuffer,
                 { encoding: 'utf8' }
               )
-
-              // Send completion signal with exposure info via sockets
-              getImageInfo(imgBuffer).then(exposureInfo => {
-                try {
-                  serverSocket
-                    .to(['Download-*', `Download-${camIndex}`])
-                    .emit('DownloadEnd', { camIndex, exposureInfo, filename: imgName })
-                } catch (error) {
-                  log.error('Socket error (downloadEnd):', error)
-                }
-              })
+              
+              // TODO: Implement proper completion signal handling for CR2 (aka RAW) images
+              if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
+                // Send completion signal with exposure info via sockets
+                getImageInfo(imgBuffer).then(exposureInfo => {
+                  try {
+                    serverSocket
+                      .to(['Download-*', `Download-${camIndex}`])
+                      .emit('DownloadEnd', { camIndex, exposureInfo, filename: imgName })
+                  } catch (error) {
+                    log.error('Socket error (downloadEnd):', error)
+                  }
+                })
+              }
             }
           }
           break
