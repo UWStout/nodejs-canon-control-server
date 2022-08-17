@@ -1,13 +1,16 @@
 import fs from 'fs'
 import path from 'path'
 
+// Temporary file name generation library
+import { temporaryWriteTask } from 'tempy'
+
 // The camera control API
 import camAPI from '@dimensional/napi-canon-cameras'
 
 // API Helper interface
 import { setupEventMonitoring } from '../camSDK/SDKEventHelper.js'
 import { getCameraNickname, getCameraSummaryList, portList } from '../camSDK/SDKCameraHelper.js'
-import { getDownloadPath, getImageInfo } from '../util/fileHelper.js'
+import { getDownloadPath, getImageInfoFromFile } from '../util/fileHelper.js'
 import { setLiveViewCamera, stopLiveView } from './liveViewSocketStreamer.js'
 
 // Setup logging and environment variables
@@ -76,12 +79,20 @@ export function setSocketServer (serverSocket) {
             grabExposureInfo = false
             log.info(`Exposure Info request: camera ${camIndex}`)
             if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
-              // Download image data
+              // Download image data and save to temporary file
               const imgData = file.downloadThumbnailToString()
               const imgBuffer = Buffer.from(imgData, 'base64')
 
-              // Send all exposure info to callback
-              getImageInfo(imgBuffer).then(exposureInfoCB)
+              // Save to temp file and extract exposure info
+              temporaryWriteTask(imgBuffer, async tempFilePath => {
+                try {
+                  const exposureInfo = await getImageInfoFromFile(tempFilePath)
+                  exposureInfoCB(exposureInfo)
+                } catch (error) {
+                  log.error('Failed to read exposure info')
+                  exposureInfoCB({ error: true, message: error.message, cause: error.cause?.message })
+                }
+              }, { encoding: 'utf8' })
             } else {
               log.error('Must be a JPEG to read image info')
               exposureInfoCB({ error: true, message: 'Must be a JPEG to read image info' })
@@ -107,14 +118,11 @@ export function setSocketServer (serverSocket) {
               const imgBuffer = Buffer.from(imgData, 'base64')
 
               // Save it to a file
-              fs.writeFileSync(
-                path.join(DOWNLOAD_DIR, getDownloadPath(), imgName),
-                imgBuffer,
-                { encoding: 'utf8' }
-              )
+              const fullFilePath = path.join(DOWNLOAD_DIR, getDownloadPath(), imgName)
+              fs.writeFileSync(fullFilePath, imgBuffer, { encoding: 'utf8' })
 
               // Send completion signal with exposure info via sockets
-              getImageInfo(imgBuffer).then(exposureInfo => {
+              getImageInfoFromFile(fullFilePath).then(exposureInfo => {
                 try {
                   serverSocket
                     .to(['Download-*', `Download-${camIndex}`])

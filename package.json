@@ -24,10 +24,11 @@
     "@dimensional/napi-canon-cameras": "file:node_packages/@dimensional/napi-canon-cameras.tgz",
     "dotenv": "^16.0.1",
     "esper-photo-control": "^0.1.0",
-    "exif": "^0.6.0",
+    "exiftool-vendored": "^17.0.1",
     "express": "^4.18.1",
     "express-winston": "^4.2.0",
     "socket.io": "^4.5.1",
+    "tempy": "^3.0.0",
     "winston": "^3.8.0",
     "winston-daily-rotate-file": "^4.7.1",
     "winston-logzio": "^5.1.4"

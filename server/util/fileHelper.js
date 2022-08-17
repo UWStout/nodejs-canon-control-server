@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-import exif from 'exif'
+import { exiftool } from 'exiftool-vendored'
 
 // Update environment variables
 import dotenv from 'dotenv'
@@ -148,28 +148,24 @@ export function updateCameraNicknames (updatedNicknames) {
   )
 }
 
-export function getImageInfo (fileBuffer) {
+export function getImageInfoFromFile (filepath) {
   return new Promise((resolve, reject) => {
-    try {
-      exif.ExifImage({ image: fileBuffer }, (error, data) => {
-        if (error) {
-          return reject(new Error('Error extracting EXIF data', { cause: error }))
-        }
-
-        return resolve({
-          shutterSpeed: data.exif.ExposureTime,
-          apertureValue: data.exif.FNumber,
-          iso: data.exif.ISO,
-          focalLength: data.exif.FocalLength,
-          whiteBalance: data.exif.WhiteBalance,
-          exposureComp: data.exif.ExposureCompensation,
-          width: data.exif.ExifImageWidth,
-          height: data.exif.ExifImageHeight,
-          orientation: data.image.Orientation
-        })
+    exiftool.read(filepath).then(tags => {
+      return resolve({
+        shutterSpeed: tags.ExposureTime,
+        apertureValue: tags.Aperture,
+        iso: tags.ISO,
+        focalLength: tags.FocalLength,
+        whiteBalance: tags.WhiteBalance,
+        exposureComp: tags.ExposureCompensation,
+        width: tags.ImageWidth,
+        height: tags.ImageHeight,
+        orientation: tags.Orientation
       })
-    } catch (error) {
+    }).catch(error => {
+      log.error('Rejected promise while extracting EXIF data')
+      log.error(error)
       return reject(new Error('Error extracting EXIF data', { cause: error }))
-    }
+    })
   })
 }

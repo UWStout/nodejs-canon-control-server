@@ -4,6 +4,7 @@
         "Dacca",
         "ESPER",
         "EXIF",
+        "exiftool",
         "exposurecompensation",
         "fullname",
         "imagequality",
@@ -17,6 +18,7 @@
         "napi",
         "Noronha",
         "Paulo",
-        "shutterspeed"
+        "shutterspeed",
+        "tempy"
     ]
 }
