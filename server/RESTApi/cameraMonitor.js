@@ -78,31 +78,30 @@ export function setSocketServer (serverSocket) {
           if (grabExposureInfo) {
             grabExposureInfo = false
             log.info(`Exposure Info request: camera ${camIndex}`)
-            if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
-              // Download image data and save to temporary file
-              const imgData = file.downloadThumbnailToString()
-              const imgBuffer = Buffer.from(imgData, 'base64')
 
-              // Save to temp file and extract exposure info
-              temporaryWriteTask(imgBuffer, async tempFilePath => {
-                try {
-                  const exposureInfo = await getImageInfoFromFile(tempFilePath)
-                  exposureInfoCB(exposureInfo)
-                } catch (error) {
-                  log.error('Failed to read exposure info')
-                  exposureInfoCB({ error: true, message: error.message, cause: error.cause?.message })
-                }
-              }, { encoding: 'utf8' })
-            } else {
-              log.error('Must be a JPEG to read image info')
-              exposureInfoCB({ error: true, message: 'Must be a JPEG to read image info' })
-            }
+            // Download image data and save to temporary file
+            const imgData = file.downloadThumbnailToString()
+            const imgBuffer = Buffer.from(imgData, 'base64')
+
+            // Save to temp file and extract exposure info
+            temporaryWriteTask(imgBuffer, async tempFilePath => {
+              try {
+                const exposureInfo = await getImageInfoFromFile(tempFilePath)
+                exposureInfoCB(exposureInfo)
+              } catch (error) {
+                log.error('Failed to read exposure info')
+                exposureInfoCB({ error: true, message: error.message, cause: error.cause?.message })
+              }
+            }, { encoding: 'utf8' })
           } else {
             log.info(`Download request: camera ${camIndex}, ${file?.name}`)
-            if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
+
+            // Expect JPEG and CR2 raw files
+            if (file?.format.value === camAPI.FileFormat.ID.JPEG || file?.format.value === camAPI.FileFormat.ID.CR2) {
               // Prepare filename
               const camName = getCameraNickname(camIndex)
-              const imgName = `SUB_${HOST_NICKNAME}_${camName}${path.extname(file.name)?.toLowerCase() || '.jpg'}`
+              const fileExt = (file?.format.value === camAPI.FileFormat.ID.JPEG) ? '.jpg' : '.cr2'
+              const imgName = `SUB_${HOST_NICKNAME}_${camName}${path.extname(file.name)?.toLowerCase() || fileExt}`
 
               // Send start signal via sockets
               try {
@@ -131,6 +130,20 @@ export function setSocketServer (serverSocket) {
                   log.error('Socket error (downloadEnd):', error)
                 }
               })
+
+              // // TODO: Implement proper completion signal handling for CR2 (aka RAW) images
+              // if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
+              //   // Send completion signal with exposure info via sockets
+              //   getImageInfo(imgBuffer).then(exposureInfo => {
+              //     try {
+              //       serverSocket
+              //         .to(['Download-*', `Download-${camIndex}`])
+              //         .emit('DownloadEnd', { camIndex, exposureInfo, filename: imgName })
+              //     } catch (error) {
+              //       log.error('Socket error (downloadEnd):', error)
+              //     }
+              //   })
+              // }
             }
           }
           break

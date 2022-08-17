@@ -42,4 +42,8 @@ router.get('/liveview/timeout', (req, res) => {
   }
 })
 
+router.get('/ping', (req, res) => {
+  return res.send({pong: true})
+})
+
 export default router
