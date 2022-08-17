@@ -90,7 +90,7 @@ export function setSocketServer (serverSocket) {
                 exposureInfoCB(exposureInfo)
               } catch (error) {
                 log.error('Failed to read exposure info')
-                exposureInfoCB({ error: true, message: error.message, cause: error.cause?.message })
+                exposureInfoCB({ error: true, message: error.message })
               }
             }, { encoding: 'utf8' })
           } else {
@@ -130,20 +130,6 @@ export function setSocketServer (serverSocket) {
                   log.error('Socket error (downloadEnd):', error)
                 }
               })
-
-              // // TODO: Implement proper completion signal handling for CR2 (aka RAW) images
-              // if (file?.format.value === camAPI.FileFormat.ID.JPEG) {
-              //   // Send completion signal with exposure info via sockets
-              //   getImageInfo(imgBuffer).then(exposureInfo => {
-              //     try {
-              //       serverSocket
-              //         .to(['Download-*', `Download-${camIndex}`])
-              //         .emit('DownloadEnd', { camIndex, exposureInfo, filename: imgName })
-              //     } catch (error) {
-              //       log.error('Socket error (downloadEnd):', error)
-              //     }
-              //   })
-              // }
             }
           }
           break
