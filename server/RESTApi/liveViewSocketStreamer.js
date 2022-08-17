@@ -65,32 +65,41 @@ function startLiveView (mySocket) {
     return
   }
 
-  // Setup countdown to timeout live view 
+  // Setup countdown to timeout live view
   countdownCallback = setInterval(() => {
-      // Tick counter down
-      timeoutCountdown = timeoutCountdown - 1000
-      // Stop live view and emit timeout signal if timeoutCountdown is below 0 and timeoutDelay is greater than 0
-      // timeoutDelay of 0 indicates 'Never'
-      if (timeoutCountdown < 0 && timeoutDelay > 0) {
-        mySocket.emit('LiveViewTimeout', {
-          message: `Live View Timed Out`,
-          timeoutDelay
-        })
-        stopLiveView()
-      }
-    },
-    1000
+    // Tick counter down
+    timeoutCountdown = timeoutCountdown - 1000
+    // Stop live view and emit timeout signal if timeoutCountdown is below 0 and timeoutDelay is greater than 0
+    // timeoutDelay of 0 indicates 'Never'
+    if (timeoutCountdown < 0 && timeoutDelay > 0) {
+      mySocket.emit('LiveViewTimeout', {
+        message: 'Live View Timed Out',
+        timeoutDelay
+      })
+      stopLiveView()
+    }
+  },
+  1000
   )
 
   // Read and pass the JPEGS along
   intervalCallback = setInterval(
     () => {
       try {
-        const imageData = currentCamera.downloadLiveViewImage()
-        mySocket.volatile.emit('LiveViewImage', { currentCameraIndex, imageData })
+        const imageData = currentCamera.downloadLiveViewImageWithHistograms()
+        mySocket.volatile.emit('LiveViewImage', {
+          currentCameraIndex,
+          imageData: imageData.image,
+          histograms: [
+            imageData.yHistogram,
+            imageData.rHistogram,
+            imageData.gHistogram,
+            imageData.bHistogram
+          ]
+        })
       } catch (e) {
         if (!e.message.includes('OBJECT_NOTREADY')) {
-          log.error('LiveView image download error:', e.message)
+          log.error('LiveView image download error:', e)
           stopLiveView()
         }
       }
@@ -124,12 +133,12 @@ export async function stopLiveView () {
 }
 
 // Return the current live view timeout
-export function getLiveViewTimeout() {
+export function getLiveViewTimeout () {
   return timeoutDelay
 }
 
 // Change the live view timeout and reset the countdown
-export function setLiveViewTimeout(timeout) {
+export function setLiveViewTimeout (timeout) {
   timeoutDelay = timeout
   timeoutCountdown = timeout
 }
