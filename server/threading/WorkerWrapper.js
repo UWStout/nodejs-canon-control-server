@@ -1,11 +1,13 @@
 import { Worker } from 'worker_threads'
 
 export default class WorkerWrapper {
+  // Create a new worker and initialize callbacks
   constructor(workerScript, rePoolCallback) {
     this.worker = new Worker(workerScript)
     this.rePoolCallback = rePoolCallback
     this.imgInfoCallback = null
 
+    // If success message recieved, return data via callback, then rejoin worker pool
     this.worker.on('message', (data) => {
       if (data.success === true) {
         this.imgInfoCallback(data.exposureInfo)
@@ -13,6 +15,8 @@ export default class WorkerWrapper {
         this.rePoolCallback(this)
       }
     })
+    
+    // Handle Error & Exit
     this.worker.on('error', (err) => {
       console.error(err)
     })
@@ -23,6 +27,7 @@ export default class WorkerWrapper {
     })
   }
 
+  // Give a task to worker
   runWorker(task) {
     this.imgInfoCallback = task.imgInfoCallback
     this.worker.postMessage(task.workerData)

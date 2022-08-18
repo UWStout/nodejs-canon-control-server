@@ -112,7 +112,7 @@ export function setSocketServer (serverSocket) {
                 log.error('Socket error (downloadStart):', error)
               }
 
-              // Download image data & generate filename
+              // Get image from camera & generate filename
               const imgData = file.downloadThumbnailToString()
               const fullFilePath = path.join(DOWNLOAD_DIR, getDownloadPath(), imgName)
               // setup callback for completion signal with exposure info via sockets
@@ -125,7 +125,8 @@ export function setSocketServer (serverSocket) {
                   log.error('Socket error (downloadEnd):', error)
                 }
               }
-              downloadImgThreaded(imgData, fullFilePath, imgInfoCallback).catch(err => console.error(err))
+              // Send Image to Worker Queue for download
+              downloadImgThreaded(imgData, fullFilePath, imgInfoCallback)
             }
           }
           break
