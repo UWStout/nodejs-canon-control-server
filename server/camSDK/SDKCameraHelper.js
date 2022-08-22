@@ -15,8 +15,13 @@ function runSoon (callback) {
 }
 
 // Remove any extra categories from a SDK property
-export function trimProp (propertyValue) {
+export function trimProp (propertyValue, propertyID = '') {
   if (typeof propertyValue !== 'string') {
+    return propertyValue
+  }
+
+  // exception for Av due to decimal point in allowed values
+  if (propertyID === 'Av' || propertyID === 'aperture'){
     return propertyValue
   }
 
@@ -489,8 +494,8 @@ function compareProperties (cam, settingsObj) {
         nonMatches.push(key)
       }
     } else {
-      if (settingsObj[key] !== trimProp(cameraProperties[key].label)) {
-        log.error(`Mismatch: ${settingsObj[key]} !== ${trimProp(cameraProperties[key].label)}`)
+      if (settingsObj[key] !== trimProp(cameraProperties[key].label, key)) {
+        console.error(`Mismatch: ${settingsObj[key]} !== ${trimProp(cameraProperties[key].label, key)}`)
         nonMatches.push(key)
       }
     }
