@@ -1,4 +1,3 @@
-import fs from 'fs'
 import path from 'path'
 
 // Temporary file name generation library
@@ -11,6 +10,7 @@ import camAPI from '@dimensional/napi-canon-cameras'
 import { setupEventMonitoring } from '../camSDK/SDKEventHelper.js'
 import { getCameraNickname, getCameraSummaryList, portList } from '../camSDK/SDKCameraHelper.js'
 import { getDownloadPath, getImageInfoFromFile } from '../util/fileHelper.js'
+import { downloadImgThreaded } from '../threading/workerController.js'
 import { setLiveViewCamera, stopLiveView } from './liveViewSocketStreamer.js'
 
 // Setup logging and environment variables
@@ -112,16 +112,11 @@ export function setSocketServer (serverSocket) {
                 log.error('Socket error (downloadStart):', error)
               }
 
-              // Download image data
+              // Get image from camera & generate filename
               const imgData = file.downloadThumbnailToString()
-              const imgBuffer = Buffer.from(imgData, 'base64')
-
-              // Save it to a file
               const fullFilePath = path.join(DOWNLOAD_DIR, getDownloadPath(), imgName)
-              fs.writeFileSync(fullFilePath, imgBuffer, { encoding: 'utf8' })
-
-              // Send completion signal with exposure info via sockets
-              getImageInfoFromFile(fullFilePath).then(exposureInfo => {
+              // setup callback for completion signal with exposure info via sockets
+              const imgInfoCallback = (exposureInfo) => {
                 try {
                   serverSocket
                     .to(['Download-*', `Download-${camIndex}`])
@@ -129,7 +124,9 @@ export function setSocketServer (serverSocket) {
                 } catch (error) {
                   log.error('Socket error (downloadEnd):', error)
                 }
-              })
+              }
+              // Send Image to Worker Queue for download
+              downloadImgThreaded(imgData, fullFilePath, imgInfoCallback)
             }
           }
           break
