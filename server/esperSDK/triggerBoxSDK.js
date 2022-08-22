@@ -116,8 +116,9 @@ export async function fireTrigger () {
 }
 
 export async function unPrimeTrigger () {
+  // Ignore un-prime requests if nothing is primed
   if (!primedTriggerBox) {
-    throw new CameraAPIError(400, null, 'Must prime trigger first')
+    return
   }
 
   try {
