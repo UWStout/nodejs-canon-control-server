@@ -26,7 +26,7 @@ export function trimProp (propertyValue, propertyID = '') {
     case 'av':
     case 'tv':
     case 'shutterspeed':
-      return propertyID
+      return propertyValue
       break
     default:
       break
