@@ -115,9 +115,12 @@ export function setSocketServer (serverSocket) {
               // Get image from camera & generate filename
               const imgData = file.downloadThumbnailToString()
               const fullFilePath = path.join(DOWNLOAD_DIR, getDownloadPath(), imgName)
+
               // setup callback for completion signal with exposure info via sockets
-              const imgInfoCallback = (exposureInfo) => {
+              const downloadCompleteCallback = async (data) => {
                 try {
+                  // Retrieve Exposure info from file
+                  const exposureInfo = await getImageInfoFromFile(data.filePath)
                   serverSocket
                     .to(['Download-*', `Download-${camIndex}`])
                     .emit('DownloadEnd', { camIndex, exposureInfo, filename: imgName })
@@ -125,8 +128,10 @@ export function setSocketServer (serverSocket) {
                   log.error('Socket error (downloadEnd):', error)
                 }
               }
+
               // Send Image to Worker Queue for download
-              downloadImgThreaded(imgData, fullFilePath, imgInfoCallback)
+              const imgBuffer = Buffer.from(imgData, 'base64')
+              downloadImgThreaded(imgBuffer, fullFilePath, downloadCompleteCallback)
             }
           }
           break

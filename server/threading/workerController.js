@@ -10,7 +10,9 @@ const IMG_DOWNLOAD_SCRIPT_PATH = path.join(process.cwd(), 'server', 'threading',
 // Initialize Worker Pool
 const THREAD_POOL_SIZE = process.env.THREAD_POOL_SIZE || 4
 const workerPool = []
-for (let i = 0; i < THREAD_POOL_SIZE; ++i) { workerPool.push(new WorkerWrapper(IMG_DOWNLOAD_SCRIPT_PATH, rePoolWorker)) }
+for (let i = 0; i < THREAD_POOL_SIZE; ++i) {
+  workerPool.push(new WorkerWrapper(IMG_DOWNLOAD_SCRIPT_PATH, rePoolWorker))
+}
 
 const taskQueue = []
 
@@ -34,7 +36,7 @@ function doNextTask () {
 }
 
 // Add new task to queue and check for available workers
-export async function downloadImgThreaded (imgData, filePath, imgInfoCallback) {
-  taskQueue.push({ workerData: { imgData, filePath }, imgInfoCallback })
+export async function downloadImgThreaded (imgBuffer, filePath, completeCallback) {
+  taskQueue.push({ workerData: { imgBuffer, filePath }, completeCallback })
   doNextTask()
 }
