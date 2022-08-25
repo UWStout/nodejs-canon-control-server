@@ -2,6 +2,9 @@
 import fs from 'fs'
 import https from 'https'
 
+// Examining and killing running processes
+import ps from 'ps-node'
+
 // Our primary HTTP(S) server library
 import Express from 'express'
 
@@ -29,7 +32,7 @@ const DEV_PORT = process.env.DEV_PORT || 3000
 const PROD_PORT = process.env.PROD_PORT || 42424
 
 // Setup the _DEV_ variable
-const _DEV_ = (process.argv.find((arg) => { return arg === 'dev' }))
+const _DEV_ = (process.env.NODE_ENV === 'development')
 
 // Logger for 'morgan' like output to our winston logger
 const expressLogger = makeLogger('server', 'express')
@@ -83,6 +86,23 @@ app.use(Express.static('public'))
 
 // Setup web-sockets
 makeSocket(server)
+
+// Lookup running server processes
+ps.lookup({
+  command: 'node',
+  arguments: 'server/server.js'
+}, (err, resultList) => {
+  if (err) {
+    log.error('Failed to lookup running processes')
+    log.error(err)
+  } else {
+    resultList.forEach((process) => {
+      if (process) {
+        log.info(`PID: ${process.pid}, COMMAND: ${process.command}, ARGUMENTS: ${process.arguments}`)
+      }
+    })
+  }
+})
 
 // Bind to a port and start listening
 if (_DEV_) {

@@ -7,9 +7,10 @@
   "scripts": {
     "monit": "pm2 start ecosystem.config.cjs --env production",
     "monit:dev": "pm2 start ecosystem.config.cjs --env development",
+    "dashboard": "pm2 monit",
     "unmonit": "pm2 delete ecosystem.config.cjs",
-    "server": "node server/server.js",
-    "server:dev": "nodemon --watch server server/server.js dev",
+    "server": "NODE_ENV=production&& node server/server.js",
+    "server:dev": "set NODE_ENV=development&& nodemon --watch server server/server.js dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -27,6 +28,7 @@
     "exiftool-vendored": "^17.0.1",
     "express": "^4.18.1",
     "express-winston": "^4.2.0",
+    "ps-node": "^0.1.6",
     "socket.io": "^4.5.1",
     "tempy": "^3.0.0",
     "winston": "^3.8.0",

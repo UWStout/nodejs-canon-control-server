@@ -17,9 +17,9 @@ const HOST_NICKNAME = process.env.HOST_NICKNAME || 'unknown'
 const LOGZIO_TOKEN = process.env.LOGZIO_TOKEN || 'bad-token'
 const LOGZIO_LISTENER = process.env.LOGZIO_LISTENER || 'nowhere.com'
 
-// Catch command line options
-const _DEV_ = process.argv.find((arg) => (arg.toLowerCase() === 'dev' || arg.toLowerCase() === 'development'))
-const verbose = process.argv.find((arg) => (arg.toLowerCase() === 'verbose'))
+// Detect development mode and verbose logging
+const _DEV_ = (process.env.NODE_ENV === 'development')
+const verbose = !!process.env.VERBOSE_LOGGING
 
 // Special format to add the host nickname
 const serverName = format((info, opts) => {
