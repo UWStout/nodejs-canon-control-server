@@ -1,7 +1,7 @@
 // Basic HTTP routing library
 import Express from 'express'
 
-import { ensureFolderExists, setDownloadPath, updateCameraNicknames } from '../util/fileHelper.js'
+import { ensureFolderExists, setDownloadPath, setFilenameSuffix, updateCameraNicknames } from '../util/fileHelper.js'
 import { setLiveViewTimeout } from './liveViewSocketStreamer.js'
 
 // Setup logging
@@ -20,6 +20,18 @@ router.use(Express.json())
 log.info('Server Writer Routes Active')
 
 // ******* Writing routes **************
+router.post('/capture/fileSuffix', (req, res) => {
+  const fileSuffix = req.body.fileSuffix || ''
+  try {
+    setFilenameSuffix(fileSuffix)
+    return res.send('OK')
+  } catch (err) {
+    CameraAPIError.respond(err, res, log, {
+      fileSuffix
+    })
+  }
+})
+
 router.post(['/session/create', '/session/confirm'], (req, res) => {
   // Determine which route was matched
   const createAllowed = req.path.includes('create')
@@ -122,8 +134,8 @@ router.post('/nicknames', (req, res) => {
 })
 
 router.post('/liveview/timeout/:value', (req, res) => {
+  const newTimeout = req.params.value
   try {
-    const newTimeout = req.params.value
     setLiveViewTimeout(newTimeout)
     res.send('OK')
   } catch (err) {

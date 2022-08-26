@@ -19,8 +19,9 @@ const NICKNAME_FILE_PATH = './server/util/CameraNicknames.json'
 // Regular expression to break down session folder data
 const SESSION_FOLDER_REGEX = /^SES_(?<nickname>.*)_AT_(?<hour>\d*)_(?<minute>\d*)_(?<day>[a-z]*)_(?<month>[a-z]*)_(?<date>\d*)_(?<year>\d*)$/mi
 
-// Current capture path for image downloads
+// Current capture path for image downloads and filename suffix (if any)
 let downloadPath = ''
+let filenameSuffix = ''
 
 // Set the directory to download incoming images to
 export function setDownloadPath (sessionPath, capturePath) {
@@ -28,9 +29,19 @@ export function setDownloadPath (sessionPath, capturePath) {
   downloadPath = path.join(sessionPath, capturePath)
 }
 
+// Set the directory to download incoming images to
+export function setFilenameSuffix (newSuffix) {
+  filenameSuffix = newSuffix
+}
+
 // Retrieve current directory images should download into
 export function getDownloadPath () {
   return downloadPath
+}
+
+// Retrieve current filename suffix
+export function getFilenameSuffix () {
+  return filenameSuffix
 }
 
 // Get a list of all directories inside a given path
