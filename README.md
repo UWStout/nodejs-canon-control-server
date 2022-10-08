@@ -14,4 +14,5 @@ You can examine the package.json to see the usual dependencies.  There is, howev
 
 Note, some code for the napi-canon-cameras module needed to be updated to work.  You can find a forked version with these fixes here:
 - https://github.com/olliebrown/napi-canon-cameras
+
 We also include a pre-built version of this module under 'node_packages'
