@@ -12,8 +12,6 @@ It is NOT intended to enable triggering the cameras remotely or to enable live v
 # Dependencies
 You can examine the package.json to see the usual dependencies.  There is, however, one unusual dependency: [napi-canon-cameras](https://github.com/dimensional-de/napi-canon-cameras).  You must have a copy of the EDSDK which is provided by Canon and CANNOT be redistributed.  You must also build napi-canon-cameras yourself (see the readme for that project).
 
-Note that I found I had to update some code for that napi-canon-cameras module to get it to work.  You can find my forked version with these fixes here:
+Note, some code for the napi-canon-cameras module needed to be updated to work.  You can find a forked version with these fixes here:
 - https://github.com/olliebrown/napi-canon-cameras
-
-# PRIVATE
-The bundled version of napi-canon-cameras is included under the 'node_packages' folder so this is no longer an external dependency.  However, this includes files from the EDSDK which we do not have the right to redistribute so this repository needs to remain private and we should use caution when sharing this project.
+We also include a pre-built version of this module under 'node_packages'
