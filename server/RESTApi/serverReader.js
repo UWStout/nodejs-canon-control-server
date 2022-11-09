@@ -1,7 +1,7 @@
 // Basic HTTP routing library
 import Express from 'express'
 
-import { getDownloadPath, getFilenameSuffix, getSessions } from '../util/fileHelper.js'
+import { getCaptureMode, getDownloadPath, getFilenameSuffix, getSessions } from '../util/fileHelper.js'
 import { getLiveViewTimeout } from './liveViewSocketStreamer.js'
 
 // Setup logging
@@ -13,6 +13,15 @@ const router = new Express.Router()
 log.info('Server Reader Routes Active')
 
 // ******* Reading routes **************
+
+router.get('/capture/mode', (req, res) => {
+  try {
+    const captureMode = getCaptureMode()
+    return res.send(captureMode)
+  } catch (err) {
+    return res.status(500).send({ error: true })
+  }
+})
 
 router.get('/capture/current', (req, res) => {
   try {

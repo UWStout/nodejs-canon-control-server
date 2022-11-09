@@ -9,7 +9,7 @@ import camAPI from '@dimensional/napi-canon-cameras'
 // API Helper interface
 import { setupEventMonitoring } from '../camSDK/SDKEventHelper.js'
 import { getCameraNickname, getCameraSummaryList, portList } from '../camSDK/SDKCameraHelper.js'
-import { getDownloadPath, getFilenameSuffix, getImageInfoFromFile } from '../util/fileHelper.js'
+import { CAPTURE_MODE, getCaptureMode, getDownloadPath, getFilenameSuffix, getImageInfoFromFile } from '../util/fileHelper.js'
 import { downloadImgThreaded } from '../threading/workerController.js'
 import { setLiveViewCamera, stopLiveView } from './liveViewSocketStreamer.js'
 
@@ -102,7 +102,10 @@ export function setSocketServer (serverSocket) {
               const suffix = getFilenameSuffix()
               const camName = getCameraNickname(camIndex)
               const fileExt = (file?.format.value === camAPI.FileFormat.ID.JPEG) ? '.jpg' : '.cr2'
-              const imgName = `${camName}_${HOST_NICKNAME}${suffix ? '_' + suffix : ''}${path.extname(file.name)?.toLowerCase() || fileExt}`
+              const imgName = `${camName}_` +
+                (getCaptureMode() === CAPTURE_MODE.SIMPLE
+                  ? file.name
+                  : `${HOST_NICKNAME}${suffix ? '_' + suffix : ''}` + `${path.extname(file.name)?.toLowerCase() || fileExt}`)
 
               // Send start signal via sockets
               try {

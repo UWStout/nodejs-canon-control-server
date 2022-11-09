@@ -19,6 +19,14 @@ const NICKNAME_FILE_PATH = './server/util/CameraNicknames.json'
 // Regular expression to break down session folder data
 const SESSION_FOLDER_REGEX = /^SES_(?<nickname>.*)_AT_(?<hour>\d*)_(?<minute>\d*)_(?<day>[a-z]*)_(?<month>[a-z]*)_(?<date>\d*)_(?<year>\d*)$/mi
 
+// Current capture mode (folder per camera or folder per capture)
+export const CAPTURE_MODE = Object.freeze({
+  SIMPLE: 'simple',
+  SESSION: 'session'
+})
+
+let captureMode = CAPTURE_MODE.SESSION
+
 // Current capture path for image downloads and filename suffix (if any)
 let downloadPath = ''
 let filenameSuffix = ''
@@ -32,6 +40,16 @@ export function setDownloadPath (sessionPath, capturePath) {
 // Set the directory to download incoming images to
 export function setFilenameSuffix (newSuffix) {
   filenameSuffix = newSuffix
+}
+
+// Set the capture mode
+export function setCaptureMode (newCaptureMode) {
+  captureMode = newCaptureMode
+}
+
+// Get the capture mode
+export function getCaptureMode () {
+  return captureMode
 }
 
 // Retrieve current directory images should download into

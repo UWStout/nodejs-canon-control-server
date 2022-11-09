@@ -1,7 +1,7 @@
 // Basic HTTP routing library
 import Express from 'express'
 
-import { ensureFolderExists, setDownloadPath, setFilenameSuffix, updateCameraNicknames } from '../util/fileHelper.js'
+import { CAPTURE_MODE, ensureFolderExists, setCaptureMode, setDownloadPath, setFilenameSuffix, updateCameraNicknames } from '../util/fileHelper.js'
 import { setLiveViewTimeout } from './liveViewSocketStreamer.js'
 
 // Setup logging
@@ -20,6 +20,25 @@ router.use(Express.json())
 log.info('Server Writer Routes Active')
 
 // ******* Writing routes **************
+router.post('/capture/mode', (req, res) => {
+  const newMode = req.body.captureMode || ''
+  try {
+    switch (newMode) {
+      case CAPTURE_MODE.SIMPLE:
+      case CAPTURE_MODE.SESSION:
+        setCaptureMode(newMode)
+        return res.send('OK')
+
+      default:
+        throw new CameraAPIError(500, null, 'Invalid mode')
+    }
+  } catch (err) {
+    CameraAPIError.respond(err, res, log, {
+      newMode
+    })
+  }
+})
+
 router.post('/capture/fileSuffix', (req, res) => {
   const fileSuffix = req.body.fileSuffix || ''
   try {
