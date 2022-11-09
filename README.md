@@ -10,10 +10,6 @@ The secondary goal of this server is to enable easy download of an image once it
 It is NOT intended to enable triggering the cameras remotely or to enable live view and other capture related features.  Adding some of these might be possible using the core library which is [napi-canon-cameras](https://github.com/dimensional-de/napi-canon-cameras) and which does support some of those use cases.
 
 # Dependencies
-You can examine the package.json to see the usual dependencies.  There is, however, one unusual dependency: [napi-canon-cameras](https://github.com/dimensional-de/napi-canon-cameras).  You must have a copy of the EDSDK which is provided by Canon and CANNOT be redistributed.  You must also build napi-canon-cameras yourself (see the readme for that project).
+You can examine the package.json to see the usual dependencies.  There is one unusual dependency: [napi-canon-cameras](https://github.com/dimensional-de/napi-canon-cameras).  To build this dependency you must have a copy of the EDSDK which is provided by Canon.  You must build napi-canon-cameras yourself (see the readme for that project).
 
-Note that I found I had to update some code for that napi-canon-cameras module to get it to work.  You can find my forked version with these fixes here:
-- https://github.com/olliebrown/napi-canon-cameras
-
-# PRIVATE
-The bundled version of napi-canon-cameras is included under the 'node_packages' folder so this is no longer an external dependency.  However, this includes files from the EDSDK which we do not have the right to redistribute so this repository needs to remain private and we should use caution when sharing this project.
+Presently we include a pre-built version of this module under 'node_packages'
