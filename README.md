@@ -3,6 +3,14 @@ An HTTP/Websockets server interface for the Canon EDSDK
 
 Remotely control canon cameras connected to a windows machine via USB.  It is persently designed to work in conjunction with [nodejs-canon-control-client](https://github.com/UWStout/nodejs-canon-control-client) which is designed for a multi-camera photogrammetry workflow, but other clients could be built using this package as a backend and target other multi-camera workflows.
 
+## Documentation
+The routes exposed by the server are documented in a [public Postman Workspace](https://www.postman.com/parsec-uw-stout/workspace/parsec-backend-server/overview).  Here are links to the individual collections within that workspace documenting each individual route:
+- [Camera Read Routes](https://www.postman.com/parsec-uw-stout/workspace/parsec-backend-server/documentation/21298009-2ccc5f0e-fdf0-44d8-9259-50291f545ecb): Read camera settings and data
+- [Camera Write Routes](https://www.postman.com/parsec-uw-stout/workspace/parsec-backend-server/documentation/21298009-554bef4b-7a4b-47d8-86bd-01b8ef9c37ca): change camera settings and control cameras
+- [Server Read Routes](https://www.postman.com/parsec-uw-stout/workspace/parsec-backend-server/documentation/21371504-d9adc16c-9b9a-48c6-aa40-9a126e9dbd23): Read current server settings (like the current save folder for images)
+- [Server Write Routes](https://www.postman.com/parsec-uw-stout/workspace/parsec-backend-server/documentation/21371504-a5a5dd42-fbf2-4de4-9d73-96587bc5b978): Change server settings
+- [Trigger Box Control Routes](https://www.postman.com/parsec-uw-stout/workspace/parsec-backend-server/documentation/21298009-79110db3-86c7-4775-849c-73ead6bcd727): Routes to both read and control ESPER trigger boxes connected to the computer via USB
+
 ## Description
 This project will create a simple server that provides two kinds of backends:
 - A RESTful API with routes that allow query and control of canon cameras via the EDSDK on windows
