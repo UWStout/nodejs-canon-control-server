@@ -1,0 +1,25 @@
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+C = US
+ST = Wisconsin
+L = Menomonie
+O = University of Wisconsin-Stout
+OU = PARSEC Lab
+CN = CanonControlServer
+
+[v3_req]
+keyUsage = keyEncipherment, dataEncipherment, digitalSignature
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = localhost
+DNS.2 = parsec-north.local
+DNS.3 = parsec-south.local
+DNS.4 = parsec-east.local
+DNS.5 = parsec-west.local
+IP.1 = 10.0.1.101

@@ -1,6 +1,8 @@
 node_modules
 .env
-ssl_certs
+ssl_certs/**/*
+!ssl_certs/dev_certificate.cnf
+!ssl_certs/gen_cert.sh
 log
 public/images/**/*.jpg
 public/images/**/*.cr?

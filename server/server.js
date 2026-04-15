@@ -3,7 +3,7 @@ import fs from 'fs'
 import https from 'https'
 
 // Examining and killing running processes
-import ps from 'ps-node'
+import psList from 'ps-list'
 
 // Our primary HTTP(S) server library
 import Express from 'express'
@@ -67,6 +67,17 @@ app.use(expressLogger)
 // Cors configuration to allow any origin and echo it back
 app.use(Cors({ origin: true }))
 
+// Always redirect to secure context
+app.use((req, res, next) => {
+  if (req.secure) {
+    // Request is already secure
+    next()
+  } else {
+    // Redirect to HTTPS version of the same URL
+    res.redirect('https://' + req.headers.host + req.url)
+  }
+})
+
 // Enable parsing of JSON-Encoded bodies
 app.use(Express.json())
 
@@ -88,20 +99,15 @@ app.use(Express.static('public'))
 makeSocket(server)
 
 // Lookup running server processes
-ps.lookup({
-  command: 'node',
-  arguments: 'server/server.js'
-}, (err, resultList) => {
-  if (err) {
-    log.error('Failed to lookup running processes')
-    log.error(err)
-  } else {
-    resultList.forEach((process) => {
-      if (process) {
-        log.info(`PID: ${process.pid}, COMMAND: ${process.command}, ARGUMENTS: ${process.arguments}`)
-      }
-    })
-  }
+psList().then((procList) => {
+  procList.forEach((process) => {
+    if (process.name.includes("node.exe")) {
+      log.info(`PID: ${process.pid}, NAME: #${process.name}`)
+    }
+  })
+}).catch((err) => {
+  log.error('Failed to lookup running processes')
+  log.error(err)
 })
 
 // Bind to a port and start listening
