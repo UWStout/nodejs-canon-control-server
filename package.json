@@ -23,6 +23,7 @@
   "license": "GPL-3.0-or-later",
   "dependencies": {
     "@dimensional/napi-canon-cameras": "file:node_packages/@dimensional/napi-canon-cameras.tgz",
+    "dnssd-advertise": "^1.1.4",
     "dotenv": "^16.0.1",
     "esper-photo-control": "^0.1.0",
     "exiftool-vendored": "^35.17.0",

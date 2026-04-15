@@ -5,6 +5,9 @@ import https from 'https'
 // Examining and killing running processes
 import psList from 'ps-list'
 
+// Service discovery
+import { advertise } from 'dnssd-advertise'
+
 // Our primary HTTP(S) server library
 import Express from 'express'
 
@@ -57,6 +60,21 @@ const SSLOptions = {
 setupNAS()
   .then(() => log.info('NAS Ready'))
   .catch(error => log.error('NAS mounting failed: ', error.message))
+
+// Publish service via Bonjour
+let bonjourStop = null
+function enableBonjour (port) {
+  // Broadcast service
+  bonjourStop = advertise({
+    name: 'CanonControlService',
+    type: 'http',
+    txt: { version: '0.2.0' },
+    protocol: 'tcp',
+    port
+  })
+
+  log.info('CanonControlService Published for service discovery')
+}
 
 // Make an HTTPS express server app
 const server = https.createServer(SSLOptions, app)
@@ -116,21 +134,37 @@ if (_DEV_) {
     log.info(`PARSEC Camera DEV server listening on https://${HOST_NAME}:${DEV_PORT}`)
 
     // Wait for initial property and camera add events to clear before enabling socket messages
-    setTimeout(() => { log.info('Enabling sockets'); serverReady() }, 2000)
+    setTimeout(() => {
+      log.info('Enabling sockets')
+      serverReady()
+      enableBonjour(DEV_PORT)
+    }, 2000)
   })
 } else {
   server.listen(PROD_PORT, HOST_NAME, () => {
     log.info(`PARSEC Camera server listening on https://${HOST_NAME}:${PROD_PORT}`)
 
     // Wait for initial property and camera add events to clear before enabling socket messages
-    setTimeout(() => { log.info('Enabling sockets'); serverReady() }, 2000)
+    setTimeout(() => {
+      log.info('Enabling sockets')
+      serverReady()
+      enableBonjour(PROD_PORT)
+    }, 2000)
   })
 }
 
 // Log on SIGINT and SIGTERM before exiting
-function handleSignal (signal) {
+async function handleSignal (signal) {
   log.info(`Received ${signal}, exiting.`)
-  process.exit(0)
+  try {
+    if (bonjourStop != null) {
+      log.info('Stopping service discovery')
+      await bonjourStop()
+    }
+  } catch (err) {
+    log.warn('Failed to stop service discovery')
+  }
 }
+
 process.on('SIGINT', handleSignal)
 process.on('SIGTERM', handleSignal)
