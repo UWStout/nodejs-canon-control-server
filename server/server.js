@@ -101,7 +101,7 @@ makeSocket(server)
 // Lookup running server processes
 psList().then((procList) => {
   procList.forEach((process) => {
-    if (process.name.includes("node.exe")) {
+    if (process.name.includes('node.exe')) {
       log.info(`PID: ${process.pid}, NAME: #${process.name}`)
     }
   })
